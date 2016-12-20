@@ -20,11 +20,15 @@ main =
 
 
 type alias Model =
-    { contacts : List Contact }
+    { contacts : List Contact
+    , tags : List Tag
+    , lists : List List
+    }
 
 
 type alias Contact =
-    { firstName : String
+    { id : String
+    , firstName : Maybe String
     , lastName : Maybe String
     , title : Maybe String
     , company : Maybe String
@@ -37,9 +41,10 @@ type alias Contact =
     }
 
 
-simpleContact : String -> String -> Contact
-simpleContact firstName email =
-    { firstName = firstName
+simpleContact : String -> String -> String -> Contact
+simpleContact id firstName email =
+    { id = id
+    , firstName = Just firstName
     , lastName = Nothing
     , title = Nothing
     , company = Nothing
@@ -98,9 +103,11 @@ type alias Tag =
 init : ( Model, Cmd Msg )
 init =
     { contacts =
-        [ simpleContact "Jay" "jay@mydomain.com"
-        , simpleContact "Jim" "jim@james.com"
+        [ simpleContact "1" "Jay" "jay@mydomain.com"
+        , simpleContact "2" "Jim" "jim@james.com"
         ]
+    , tags = []
+    , lists = []
     }
         ! []
 
@@ -174,11 +181,20 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    ul []
-        (List.map
-            (\contact -> li [] [ text contact.firstName ])
-            model.contacts
-        )
+    div [ class "container" ]
+        [ ul []
+            (List.map
+                (\contact ->
+                    li []
+                        [ text
+                            (Maybe.withDefault contact.email
+                                contact.firstName
+                            )
+                        ]
+                )
+                model.contacts
+            )
+        ]
 
 
 
