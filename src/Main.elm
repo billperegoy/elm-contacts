@@ -174,6 +174,14 @@ update msg model =
 -- View
 
 
+contactsTable : List Contact -> Html Msg
+contactsTable contacts =
+    table [ class "table table-striped" ]
+        [ tbody []
+            (contactRows contacts)
+        ]
+
+
 contactRows : List Contact -> List (Html Msg)
 contactRows contacts =
     List.map
@@ -194,26 +202,47 @@ contactsCount contacts =
             contacts |> List.length
     in
         h2 []
-            [ text ("Contacts: " ++ toString count)
+            [ span [ class "label label-primary" ]
+                [ text ("Contacts: " ++ toString count) ]
             ]
 
 
-errors : Model -> Html Msg
-errors model =
-    if model.error == "" then
+errors : String -> Html Msg
+errors errorString =
+    if errorString == "" then
         div [] []
     else
-        div [ class "alert alert-danger" ] [ text model.error ]
+        div [ class "alert alert-danger" ] [ text errorString ]
+
+
+sidebar : Html Msg
+sidebar =
+    div [ class "col-md-3" ]
+        [ h2 []
+            [ span
+                [ class "label label-default" ]
+                [ text "sidebar" ]
+            ]
+        ]
+
+
+mainContent : Model -> Html Msg
+mainContent model =
+    div [ class "col-md-9" ]
+        [ (errors model.error)
+        , (contactsCount model.contacts)
+        , (contactsTable model.contacts)
+        ]
 
 
 view : Model -> Html Msg
 view model =
-    div [ class "container" ]
-        [ (errors model)
-        , (contactsCount model.contacts)
-        , table [ class "table table-striped" ]
-            [ tbody []
-                (contactRows model.contacts)
+    div
+        [ class "container" ]
+        [ div
+            [ class "row" ]
+            [ sidebar
+            , (mainContent model)
             ]
         ]
 
