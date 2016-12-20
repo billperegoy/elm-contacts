@@ -2,7 +2,10 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Utils
+import Http
+import Json.Decode
+import Json.Decode.Pipeline
+import ApiKeys
 
 
 main : Program Never Model Msg
@@ -23,37 +26,24 @@ type alias Model =
     { contacts : List Contact
     , tags : List Tag
     , lists : List List
+    , error : String
+    }
+
+
+type alias ContactsResponse =
+    { contacts : List Contact
     }
 
 
 type alias Contact =
-    { id : String
-    , firstName : Maybe String
-    , lastName : Maybe String
-    , title : Maybe String
-    , company : Maybe String
-    , email : String
-    , lists : List EmailList
-    , phone : List Phone
-    , customFields : List CustomField
-    , tags : List Tag
-    , state : ContactState
+    { firstName : String
+    , lastName : String
+    , email : Email
     }
 
 
-simpleContact : String -> String -> String -> Contact
-simpleContact id firstName email =
-    { id = id
-    , firstName = Just firstName
-    , lastName = Nothing
-    , title = Nothing
-    , company = Nothing
-    , email = email
-    , lists = []
-    , phone = []
-    , customFields = []
-    , tags = []
-    , state = NotSet
+type alias Email =
+    { address : String
     }
 
 
@@ -102,14 +92,12 @@ type alias Tag =
 
 init : ( Model, Cmd Msg )
 init =
-    { contacts =
-        [ simpleContact "1" "Jay" "jay@mydomain.com"
-        , simpleContact "2" "Jim" "jim@james.com"
-        ]
+    { contacts = []
     , tags = []
     , lists = []
+    , error = ""
     }
-        ! []
+        ! [ getContacts ]
 
 
 type ContactFilterType
@@ -122,7 +110,8 @@ type ContactFilterType
 
 
 type Msg
-    = FilterByState ContactFilterType
+    = ProcessContacts (Result Http.Error ContactsResponse)
+    | FilterByState ContactFilterType
     | FilterByList String
     | FilterByTag String
       --
@@ -171,6 +160,12 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        ProcessContacts (Ok response) ->
+            { model | contacts = response.contacts } ! []
+
+        ProcessContacts (Err error) ->
+            { model | error = toString error } ! []
+
         _ ->
             model ! []
 
@@ -179,21 +174,47 @@ update msg model =
 -- View
 
 
+contactRows : List Contact -> List (Html Msg)
+contactRows contacts =
+    List.map
+        (\contact ->
+            tr []
+                [ td [] [ text contact.lastName ]
+                , td [] [ text contact.firstName ]
+                , td [] [ text contact.email.address ]
+                ]
+        )
+        contacts
+
+
+contactsCount : List Contact -> Html Msg
+contactsCount contacts =
+    let
+        count =
+            contacts |> List.length
+    in
+        h2 []
+            [ text ("Contacts: " ++ toString count)
+            ]
+
+
+errors : Model -> Html Msg
+errors model =
+    if model.error == "" then
+        div [] []
+    else
+        div [ class "alert alert-danger" ] [ text model.error ]
+
+
 view : Model -> Html Msg
 view model =
     div [ class "container" ]
-        [ ul []
-            (List.map
-                (\contact ->
-                    li []
-                        [ text
-                            (Maybe.withDefault contact.email
-                                contact.firstName
-                            )
-                        ]
-                )
-                model.contacts
-            )
+        [ (errors model)
+        , (contactsCount model.contacts)
+        , table [ class "table table-striped" ]
+            [ tbody []
+                (contactRows model.contacts)
+            ]
         ]
 
 
@@ -204,3 +225,60 @@ view model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
+
+
+
+-- Http
+
+
+headers : List Http.Header
+headers =
+    [ Http.header "x-api-key" ApiKeys.apiKey
+    , Http.header "authorization" ApiKeys.authorization
+    , Http.header "accept" "application/json"
+    , Http.header "content_type" "application/json"
+    ]
+
+
+getContacts : Cmd Msg
+getContacts =
+    let
+        url =
+            "https://api.cc.email/v3/contacts?limit=500&sort=contacts.last_name"
+    in
+        Http.send ProcessContacts
+            (Http.request
+                { method = "GET"
+                , headers = headers
+                , url = url
+                , body = Http.emptyBody
+                , expect = Http.expectJson contactResponseDecoder
+                , timeout = Nothing
+                , withCredentials = False
+                }
+            )
+
+
+contactResponseDecoder : Json.Decode.Decoder ContactsResponse
+contactResponseDecoder =
+    Json.Decode.Pipeline.decode ContactsResponse
+        |> Json.Decode.Pipeline.required "contacts" contactListDecoder
+
+
+contactListDecoder : Json.Decode.Decoder (List Contact)
+contactListDecoder =
+    Json.Decode.list contactDecoder
+
+
+contactDecoder : Json.Decode.Decoder Contact
+contactDecoder =
+    Json.Decode.Pipeline.decode Contact
+        |> Json.Decode.Pipeline.required "first_name" Json.Decode.string
+        |> Json.Decode.Pipeline.required "last_name" Json.Decode.string
+        |> Json.Decode.Pipeline.required "email_address" emailDecoder
+
+
+emailDecoder : Json.Decode.Decoder Email
+emailDecoder =
+    Json.Decode.Pipeline.decode Email
+        |> Json.Decode.Pipeline.required "address" Json.Decode.string
