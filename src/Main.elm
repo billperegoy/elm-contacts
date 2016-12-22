@@ -23,7 +23,8 @@ main =
 
 
 type alias Model =
-    { contacts : List Contact
+    { contactsCount : Int
+    , contacts : List Contact
     , tags : List Tag
     , lists : List List
     , error : String
@@ -31,13 +32,14 @@ type alias Model =
 
 
 type alias ContactsResponse =
-    { contacts : List Contact
+    { count : Int
+    , contacts : List Contact
     }
 
 
 type alias Contact =
-    { firstName : String
-    , lastName : String
+    { firstName : Maybe String
+    , lastName : Maybe String
     , email : Email
     }
 
@@ -92,7 +94,8 @@ type alias Tag =
 
 init : ( Model, Cmd Msg )
 init =
-    { contacts = []
+    { contactsCount = 0
+    , contacts = []
     , tags = []
     , lists = []
     , error = ""
@@ -161,7 +164,11 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ProcessContacts (Ok response) ->
-            { model | contacts = response.contacts } ! []
+            { model
+                | contacts = response.contacts
+                , contactsCount = response.count
+            }
+                ! []
 
         ProcessContacts (Err error) ->
             { model | error = toString error } ! []
@@ -208,24 +215,20 @@ contactRows contacts =
     List.map
         (\contact ->
             tr []
-                [ td [] [ text contact.lastName ]
-                , td [] [ text contact.firstName ]
+                [ td [] [ text (Maybe.withDefault "" contact.lastName) ]
+                , td [] [ text (Maybe.withDefault "" contact.firstName) ]
                 , td [] [ text contact.email.address ]
                 ]
         )
         contacts
 
 
-contactsCount : List Contact -> Html Msg
-contactsCount contacts =
-    let
-        count =
-            contacts |> List.length
-    in
-        h2 []
-            [ span [ class "label label-primary" ]
-                [ text ("Contacts: " ++ toString count) ]
-            ]
+contactsCount : Int -> Html Msg
+contactsCount count =
+    h2 []
+        [ span [ class "label label-primary" ]
+            [ text ("Contacts: " ++ toString count) ]
+        ]
 
 
 errors : String -> Html Msg
@@ -251,7 +254,7 @@ mainContent : Model -> Html Msg
 mainContent model =
     div [ class "col-md-9" ]
         [ (errors model.error)
-        , (contactsCount model.contacts)
+        , (contactsCount model.contactsCount)
         , (contactsTable model.contacts)
         ]
 
@@ -295,7 +298,7 @@ getContacts =
     let
         url =
             --"https://api.cc.email/v3/contacts?limit=500&sort=contacts.last_name"
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?limit=500&sort=contacts.last_name"
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true"
     in
         Http.send ProcessContacts
             (Http.request
@@ -313,6 +316,7 @@ getContacts =
 contactResponseDecoder : Json.Decode.Decoder ContactsResponse
 contactResponseDecoder =
     Json.Decode.Pipeline.decode ContactsResponse
+        |> Json.Decode.Pipeline.required "contacts_count" Json.Decode.int
         |> Json.Decode.Pipeline.required "contacts" contactListDecoder
 
 
@@ -324,8 +328,8 @@ contactListDecoder =
 contactDecoder : Json.Decode.Decoder Contact
 contactDecoder =
     Json.Decode.Pipeline.decode Contact
-        |> Json.Decode.Pipeline.required "first_name" Json.Decode.string
-        |> Json.Decode.Pipeline.required "last_name" Json.Decode.string
+        |> Json.Decode.Pipeline.required "first_name" (Json.Decode.nullable Json.Decode.string)
+        |> Json.Decode.Pipeline.required "last_name" (Json.Decode.nullable Json.Decode.string)
         |> Json.Decode.Pipeline.required "email_address" emailDecoder
 
 
