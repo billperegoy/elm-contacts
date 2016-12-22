@@ -174,10 +174,31 @@ update msg model =
 -- View
 
 
+tableHeader : List (Html Msg)
+tableHeader =
+    [ thead []
+        [ tr []
+            [ th [] [ text "Last Name" ]
+            , th [] [ text "First Name" ]
+            , th [] [ text "Email" ]
+            ]
+        ]
+    ]
+
+
 contactsTable : List Contact -> Html Msg
 contactsTable contacts =
     table [ class "table table-striped" ]
-        [ tbody []
+        [ {- thead []
+             [ tr []
+                 [ th [] [ text "Last Name" ]
+                 , th [] [ text "First Name" ]
+                 , th [] [ text "Email" ]
+                 ]
+             ]
+               ,
+          -}
+          tbody []
             (contactRows contacts)
         ]
 
@@ -273,7 +294,8 @@ getContacts : Cmd Msg
 getContacts =
     let
         url =
-            "https://api.cc.email/v3/contacts?limit=500&sort=contacts.last_name"
+            --"https://api.cc.email/v3/contacts?limit=500&sort=contacts.last_name"
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?limit=500&sort=contacts.last_name"
     in
         Http.send ProcessContacts
             (Http.request
