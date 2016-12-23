@@ -73,6 +73,13 @@ type alias Tag =
     }
 
 
+type ContactsFilterState
+    = All
+    | Unsubscribed
+    | ByTag String
+    | ByList String
+
+
 init : ( Model, Cmd Msg )
 init =
     let
@@ -88,13 +95,6 @@ init =
         , error = ""
         }
             ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
-
-
-type ContactsFilterState
-    = All
-    | Unsubscribed
-    | ByTag String
-    | ByList String
 
 
 
