@@ -225,30 +225,28 @@ update msg model =
 -- View
 
 
-tableHeader : List (Html Msg)
+tableHeader : Html Msg
 tableHeader =
-    [ thead []
+    thead []
         [ tr []
             [ th [] [ text "Last Name" ]
             , th [] [ text "First Name" ]
             , th [] [ text "Email" ]
             ]
         ]
-    ]
+
+
+tableBody : List Contact -> Html Msg
+tableBody contacts =
+    tbody []
+        (contactRows contacts)
 
 
 contactsTable : List Contact -> Html Msg
 contactsTable contacts =
     table [ class "table table-striped" ]
-        [ thead []
-            [ tr []
-                [ th [] [ text "Last Name" ]
-                , th [] [ text "First Name" ]
-                , th [] [ text "Email" ]
-                ]
-            ]
-        , tbody []
-            (contactRows contacts)
+        [ tableHeader
+        , tableBody contacts
         ]
 
 
