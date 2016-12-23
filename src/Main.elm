@@ -25,7 +25,9 @@ main =
 
 type alias Model =
     { contactsCount : Int
+    , contactsPerPage : Int
     , contacts : List Contact
+    , filterState : ContactsFilterState
     , tags : List Tag
     , lists : List EmailList
     , error : String
@@ -66,40 +68,6 @@ type alias TagsResponse =
     }
 
 
-type ContactState
-    = NotSet
-    | TempHold
-    | PendingConfirmation
-    | Implicit
-    | Explicit
-    | OptOut
-    | Deprecated
-    | Active
-
-
-type alias Phone =
-    { kind : PhoneType
-    , number : String
-    }
-
-
-type PhoneType
-    = Home
-    | Work
-    | Mobile
-    | Fax
-    | Other
-
-
-type CustomField
-    = Website String
-    | Twitter String
-    | Facebook String
-    | Google String
-    | Flickr String
-    | Custom String String
-
-
 type alias Tag =
     { id : String
     , name : String
@@ -109,17 +77,21 @@ type alias Tag =
 init : ( Model, Cmd Msg )
 init =
     { contactsCount = 0
+    , contactsPerPage = 50
     , contacts = []
+    , filterState = All
     , tags = []
     , lists = []
     , error = ""
     }
-        ! [ getContacts Nothing Nothing, getEmailLists, getTags ]
+        ! [ getContacts All 50, getEmailLists, getTags ]
 
 
-type ContactFilterType
-    = ContactActive
-    | ContactUnsubscribed
+type ContactsFilterState
+    = All
+    | Unsubscribed
+    | ByTag String
+    | ByList String
 
 
 
@@ -130,10 +102,10 @@ type Msg
     = ProcessContacts (Result Http.Error ContactsResponse)
     | ProcessEmailLists (Result Http.Error EmailListResponse)
     | ProcessTags (Result Http.Error TagsResponse)
-    | FilterByState ContactFilterType
     | FilterByList String
     | FilterByTag String
     | GetAllContacts
+    | GetUnsubscribedContacts
       --
     | UpdateSearchString String
     | Search
@@ -200,13 +172,36 @@ update msg model =
                 ! []
 
         GetAllContacts ->
-            model ! [ getContacts Nothing Nothing ]
+            { model
+                | contacts = []
+                , contactsCount = 0
+                , filterState = All
+            }
+                ! [ getContacts All model.contactsPerPage ]
+
+        GetUnsubscribedContacts ->
+            { model
+                | contacts = []
+                , contactsCount = 0
+                , filterState = Unsubscribed
+            }
+                ! [ getContacts Unsubscribed model.contactsPerPage ]
 
         FilterByList listId ->
-            model ! [ getContacts (Just listId) Nothing ]
+            { model
+                | contacts = []
+                , contactsCount = 0
+                , filterState = ByList listId
+            }
+                ! [ getContacts (ByList listId) model.contactsPerPage ]
 
         FilterByTag tagId ->
-            model ! [ getContacts Nothing (Just tagId) ]
+            { model
+                | contacts = []
+                , contactsCount = 0
+                , filterState = ByTag tagId
+            }
+                ! [ getContacts (ByTag tagId) model.contactsPerPage ]
 
         ProcessContacts (Err error) ->
             { model | error = toString error } ! []
@@ -263,12 +258,45 @@ contactRows contacts =
         contacts
 
 
-contactsCount : Int -> Html Msg
-contactsCount count =
-    h2 []
-        [ span [ class "label label-primary" ]
-            [ text ("Contacts: " ++ toString count) ]
-        ]
+tagName : String -> List Tag -> String
+tagName id tags =
+    tags
+        |> List.filter (\tag -> tag.id == id)
+        |> List.head
+        |> Maybe.withDefault { name = "unknown", id = "inknown" }
+        |> .name
+
+
+listName : String -> List EmailList -> String
+listName id lists =
+    lists
+        |> List.filter (\list -> list.id == id)
+        |> List.head
+        |> Maybe.withDefault { name = "unknown", id = "inknown" }
+        |> .name
+
+
+contactsCount : Model -> Html Msg
+contactsCount model =
+    let
+        displayText =
+            case model.filterState of
+                All ->
+                    "All Contacts (" ++ toString model.contactsCount ++ ")"
+
+                Unsubscribed ->
+                    "Unsubscribed (" ++ toString model.contactsCount ++ ")"
+
+                ByTag id ->
+                    tagName id model.tags ++ " (" ++ toString model.contactsCount ++ ")"
+
+                ByList id ->
+                    listName id model.lists ++ " (" ++ toString model.contactsCount ++ ")"
+    in
+        h2 []
+            [ span [ class "label label-primary" ]
+                [ text displayText ]
+            ]
 
 
 errors : String -> Html Msg
@@ -287,7 +315,7 @@ sidebar lists tags =
             ]
         , ul []
             [ li [] [ text "active" ]
-            , li [] [ text "unsubscribed" ]
+            , li [] [ a [ onClick GetUnsubscribedContacts, href "#" ] [ text "unsubscribed" ] ]
             , li [] [ a [ onClick GetAllContacts, href "#" ] [ text "view all contacts" ] ]
             ]
         , h4 []
@@ -321,7 +349,7 @@ mainContent : Model -> Html Msg
 mainContent model =
     div [ class "col-md-9" ]
         [ (errors model.error)
-        , (contactsCount model.contactsCount)
+        , (contactsCount model)
         , (contactsTable model.contacts)
         ]
 
@@ -360,20 +388,21 @@ headers =
     ]
 
 
-getContacts : Maybe String -> Maybe String -> Cmd Msg
-getContacts listId tagId =
+getContacts : ContactsFilterState -> Int -> Cmd Msg
+getContacts filter contactsPerPage =
     let
         url =
-            case listId of
-                Nothing ->
-                    case tagId of
-                        Nothing ->
-                            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500"
+            case filter of
+                All ->
+                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500"
 
-                        Just id ->
-                            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&tags=" ++ id
+                Unsubscribed ->
+                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&status=unsubscribed"
 
-                Just id ->
+                ByTag id ->
+                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&tags=" ++ id
+
+                ByList id ->
                     "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&lists=" ++ id
     in
         Http.send ProcessContacts
