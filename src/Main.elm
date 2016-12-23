@@ -106,11 +106,11 @@ type Msg
     = ProcessContacts (Result Http.Error ContactsResponse)
     | ProcessEmailLists (Result Http.Error EmailListResponse)
     | ProcessTags (Result Http.Error TagsResponse)
-    | FilterByList String
-    | FilterByTag String
-    | GetAllContacts
-    | GetUnsubscribedContacts
-      --
+    | GetContacts ContactsFilterState
+
+
+
+{--
     | UpdateSearchString String
     | Search
     | ShowAdvancedSearchModal
@@ -151,6 +151,7 @@ type Msg
     | AddMultipleContacts
     | UploadContacts
     | ImportContacts
+    --}
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -178,40 +179,14 @@ update msg model =
             }
                 ! []
 
-        -- FIXME - These can be combined into a single action
-        GetAllContacts ->
+        GetContacts filterState ->
             { model
                 | contacts = []
                 , contactsCount = 0
-                , filterState = All
+                , filterState = filterState
             }
-                ! [ getContacts All model.contactsPerPage ]
+                ! [ getContacts filterState model.contactsPerPage ]
 
-        GetUnsubscribedContacts ->
-            { model
-                | contacts = []
-                , contactsCount = 0
-                , filterState = Unsubscribed
-            }
-                ! [ getContacts Unsubscribed model.contactsPerPage ]
-
-        FilterByList listId ->
-            { model
-                | contacts = []
-                , contactsCount = 0
-                , filterState = ByList listId
-            }
-                ! [ getContacts (ByList listId) model.contactsPerPage ]
-
-        FilterByTag tagId ->
-            { model
-                | contacts = []
-                , contactsCount = 0
-                , filterState = ByTag tagId
-            }
-                ! [ getContacts (ByTag tagId) model.contactsPerPage ]
-
-        -- FIXME - ^^^^^ These can be combined into a single action ^^^^^
         ProcessContacts (Err error) ->
             { model | error = toString error } ! []
 
@@ -220,9 +195,6 @@ update msg model =
 
         ProcessTags (Err error) ->
             { model | error = toString error } ! []
-
-        _ ->
-            model ! []
 
 
 
@@ -324,8 +296,8 @@ sidebar lists tags =
             ]
         , ul []
             [ li [] [ text "active" ]
-            , li [] [ a [ onClick GetUnsubscribedContacts, href "#" ] [ text "unsubscribed" ] ]
-            , li [] [ a [ onClick GetAllContacts, href "#" ] [ text "view all contacts" ] ]
+            , li [] [ a [ onClick (GetContacts Unsubscribed), href "#" ] [ text "unsubscribed" ] ]
+            , li [] [ a [ onClick (GetContacts All), href "#" ] [ text "view all contacts" ] ]
             ]
         , h4 []
             [ span [ class "label label-success" ] [ text "email lists" ]
@@ -334,7 +306,7 @@ sidebar lists tags =
             (List.map
                 (\list ->
                     li []
-                        [ a [ onClick (FilterByList list.id), href "#" ] [ text list.name ]
+                        [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
                         ]
                 )
                 lists
@@ -346,7 +318,7 @@ sidebar lists tags =
             (List.map
                 (\tag ->
                     li []
-                        [ a [ onClick (FilterByTag tag.id), href "#" ] [ text tag.name ]
+                        [ a [ onClick (GetContacts (ByTag tag.id)), href "#" ] [ text tag.name ]
                         ]
                 )
                 tags
@@ -388,31 +360,53 @@ subscriptions model =
 -- Http
 
 
+httpParams : List ( String, String ) -> String
+httpParams params =
+    let
+        paramStringList =
+            List.map (\( name, value ) -> name ++ "=" ++ value) params
+    in
+        String.join "&" paramStringList
+
+
+urlString : String -> List ( String, String ) -> String
+urlString baseUrl params =
+    baseUrl
+        ++ "?"
+        ++ httpParams params
+
+
 getContacts : ContactsFilterState -> Int -> Cmd Msg
 getContacts filter contactsPerPage =
     let
-        limitString =
-            "&limit=" ++ toString contactsPerPage
+        baseUrl =
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts"
+
+        sortParam =
+            ( "sort", "contacts.last_name" )
+
+        limitParam =
+            ( "limit", toString contactsPerPage )
+
+        countParam =
+            ( "include_count", "true" )
+
+        commonParams =
+            [ sortParam, countParam, limitParam ]
 
         url =
             case filter of
                 All ->
-                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true"
-                        ++ limitString
+                    urlString baseUrl commonParams
 
                 Unsubscribed ->
-                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&status=unsubscribed"
-                        ++ limitString
+                    urlString baseUrl (( "status", "unsubscribed" ) :: commonParams)
 
                 ByTag id ->
-                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&tags="
-                        ++ id
-                        ++ limitString
+                    urlString baseUrl (( "tags", id ) :: commonParams)
 
                 ByList id ->
-                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&lists="
-                        ++ id
-                        ++ limitString
+                    urlString baseUrl (( "lists", id ) :: commonParams)
     in
         Http.send ProcessContacts (Http.get url contactResponseDecoder)
 
