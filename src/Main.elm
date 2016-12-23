@@ -76,15 +76,19 @@ type alias Tag =
 
 init : ( Model, Cmd Msg )
 init =
-    { contactsCount = 0
-    , contactsPerPage = 50
-    , contacts = []
-    , filterState = All
-    , tags = []
-    , lists = []
-    , error = ""
-    }
-        ! [ getContacts All 50, getEmailLists, getTags ]
+    let
+        contactsPerPage =
+            50
+    in
+        { contactsCount = 0
+        , contactsPerPage = contactsPerPage
+        , contacts = []
+        , filterState = All
+        , tags = []
+        , lists = []
+        , error = ""
+        }
+            ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
 
 
 type ContactsFilterState
@@ -384,15 +388,6 @@ subscriptions model =
 -- Http
 
 
-headers : List Http.Header
-headers =
-    [ Http.header "x-api-key" ApiKeys.apiKey
-    , Http.header "authorization" ApiKeys.authorization
-    , Http.header "accept" "application/json"
-    , Http.header "content_type" "application/json"
-    ]
-
-
 getContacts : ContactsFilterState -> Int -> Cmd Msg
 getContacts filter contactsPerPage =
     let
@@ -419,17 +414,7 @@ getContacts filter contactsPerPage =
                         ++ id
                         ++ limitString
     in
-        Http.send ProcessContacts
-            (Http.request
-                { method = "GET"
-                , headers = headers
-                , url = Debug.log "URL: " url
-                , body = Http.emptyBody
-                , expect = Http.expectJson contactResponseDecoder
-                , timeout = Nothing
-                , withCredentials = False
-                }
-            )
+        Http.send ProcessContacts (Http.get url contactResponseDecoder)
 
 
 getEmailLists : Cmd Msg
@@ -438,17 +423,7 @@ getEmailLists =
         url =
             "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
     in
-        Http.send ProcessEmailLists
-            (Http.request
-                { method = "GET"
-                , headers = headers
-                , url = url
-                , body = Http.emptyBody
-                , expect = Http.expectJson emailListResponseDecoder
-                , timeout = Nothing
-                , withCredentials = False
-                }
-            )
+        Http.send ProcessEmailLists (Http.get url emailListResponseDecoder)
 
 
 getTags : Cmd Msg
@@ -457,17 +432,7 @@ getTags =
         url =
             "http://0.0.0.0:3000/contacts-service/v3/accounts/1/tags"
     in
-        Http.send ProcessTags
-            (Http.request
-                { method = "GET"
-                , headers = headers
-                , url = url
-                , body = Http.emptyBody
-                , expect = Http.expectJson tagsResponseDecoder
-                , timeout = Nothing
-                , withCredentials = False
-                }
-            )
+        Http.send ProcessTags (Http.get url tagsResponseDecoder)
 
 
 contactResponseDecoder : Json.Decode.Decoder ContactsResponse
