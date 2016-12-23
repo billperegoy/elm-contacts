@@ -26,6 +26,8 @@ type alias Model =
     { contactsCount : Int
     , contactsPerPage : Int
     , contacts : List Contact
+    , nextContactsUrl : Maybe String
+    , previousContactsUrl : Maybe String
     , filterState : ContactsFilterState
     , tags : List Tag
     , lists : List EmailList
@@ -90,6 +92,8 @@ init =
         { contactsCount = 0
         , contactsPerPage = contactsPerPage
         , contacts = []
+        , nextContactsUrl = Nothing
+        , previousContactsUrl = Nothing
         , filterState = All
         , tags = []
         , lists = []
@@ -107,6 +111,7 @@ type Msg
     | ProcessEmailLists (Result Http.Error EmailListResponse)
     | ProcessTags (Result Http.Error TagsResponse)
     | GetContacts ContactsFilterState
+    | GetPaginatedContacts String
 
 
 
@@ -158,12 +163,27 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ProcessContacts (Ok response) ->
-            { model
-                | contacts = response.contacts
-                , contactsCount = response.count
-                , error = ""
-            }
-                ! []
+            let
+                previous =
+                    if response.links.previous.url == "" then
+                        Nothing
+                    else
+                        Just response.links.previous.url
+
+                next =
+                    if response.links.next.url == "" then
+                        Nothing
+                    else
+                        Just response.links.next.url
+            in
+                { model
+                    | contacts = response.contacts
+                    , contactsCount = response.count
+                    , previousContactsUrl = previous
+                    , nextContactsUrl = next
+                    , error = ""
+                }
+                    ! []
 
         ProcessEmailLists (Ok response) ->
             { model
@@ -195,6 +215,9 @@ update msg model =
 
         ProcessTags (Err error) ->
             { model | error = toString error } ! []
+
+        GetPaginatedContacts url ->
+            model ! [ getPaginatedContacts url ]
 
 
 
@@ -332,7 +355,41 @@ mainContent model =
         [ (errors model.error)
         , (contactsCount model)
         , (contactsTable model.contacts)
+        , (pagination model)
         ]
+
+
+pagination : Model -> Html Msg
+pagination model =
+    let
+        nextLinkUrl =
+            Maybe.withDefault "" model.nextContactsUrl
+
+        previousLinkUrl =
+            Maybe.withDefault "" model.previousContactsUrl
+
+        nextLink =
+            if nextLinkUrl == "" then
+                span [] []
+            else
+                span [ style [ ( "margin-right", "5px" ) ] ]
+                    [ a [ href "#", onClick (GetPaginatedContacts nextLinkUrl) ]
+                        [ text "next" ]
+                    ]
+
+        previousLink =
+            if previousLinkUrl == "" then
+                span [] []
+            else
+                span [ style [ ( "margin-right", "5px" ) ] ]
+                    [ a [ href "#", onClick (GetPaginatedContacts previousLinkUrl) ]
+                        [ text "previous" ]
+                    ]
+    in
+        div []
+            [ previousLink
+            , nextLink
+            ]
 
 
 view : Model -> Html Msg
@@ -407,6 +464,15 @@ getContacts filter contactsPerPage =
 
                 ByList id ->
                     urlString baseUrl (( "lists", id ) :: commonParams)
+    in
+        Http.send ProcessContacts (Http.get url contactResponseDecoder)
+
+
+getPaginatedContacts : String -> Cmd Msg
+getPaginatedContacts path =
+    let
+        url =
+            "http://0.0.0.0:3000/" ++ path
     in
         Http.send ProcessContacts (Http.get url contactResponseDecoder)
 
