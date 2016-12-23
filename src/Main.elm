@@ -119,6 +119,7 @@ type Msg
     | ProcessTags (Result Http.Error TagsResponse)
     | GetContacts ContactsFilterState
     | GetPaginatedContacts PaginationDirection String
+    | SetContactsPerPage Int
 
 
 
@@ -238,6 +239,13 @@ update msg model =
                     | startContactIndex = model.startContactIndex + increment
                 }
                     ! [ getPaginatedContacts url ]
+
+        SetContactsPerPage count ->
+            { model
+                | contactsPerPage = count
+                , startContactIndex = 1
+            }
+                ! [ getContacts model.filterState count ]
 
 
 
@@ -375,7 +383,18 @@ mainContent model =
         [ (errors model.error)
         , (contactsCount model)
         , (contactsTable model.contacts)
+        , setContactsPerPage
         , (pagination model)
+        ]
+
+
+setContactsPerPage : Html Msg
+setContactsPerPage =
+    ul [ style [ ( "list-style-type", "none" ) ] ]
+        [ li [] [ a [ href "#", onClick (SetContactsPerPage 50) ] [ text "page size 50" ] ]
+        , li [] [ a [ href "#", onClick (SetContactsPerPage 100) ] [ text "page size 100" ] ]
+        , li [] [ a [ href "#", onClick (SetContactsPerPage 250) ] [ text "page size 250" ] ]
+        , li [] [ a [ href "#", onClick (SetContactsPerPage 500) ] [ text "page size 500" ] ]
         ]
 
 
