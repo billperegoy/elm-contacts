@@ -26,6 +26,7 @@ type alias Model =
     { contactsCount : Int
     , contactsPerPage : Int
     , contacts : List Contact
+    , startContactIndex : Int
     , nextContactsUrl : Maybe String
     , previousContactsUrl : Maybe String
     , filterState : ContactsFilterState
@@ -83,6 +84,11 @@ type ContactsFilterState
     | ByList String
 
 
+type PaginationDirection
+    = Forward
+    | Backward
+
+
 init : ( Model, Cmd Msg )
 init =
     let
@@ -92,6 +98,7 @@ init =
         { contactsCount = 0
         , contactsPerPage = contactsPerPage
         , contacts = []
+        , startContactIndex = 1
         , nextContactsUrl = Nothing
         , previousContactsUrl = Nothing
         , filterState = All
@@ -111,7 +118,7 @@ type Msg
     | ProcessEmailLists (Result Http.Error EmailListResponse)
     | ProcessTags (Result Http.Error TagsResponse)
     | GetContacts ContactsFilterState
-    | GetPaginatedContacts String
+    | GetPaginatedContacts PaginationDirection String
 
 
 
@@ -203,6 +210,7 @@ update msg model =
             { model
                 | contacts = []
                 , contactsCount = 0
+                , startContactIndex = 1
                 , filterState = filterState
             }
                 ! [ getContacts filterState model.contactsPerPage ]
@@ -216,8 +224,20 @@ update msg model =
         ProcessTags (Err error) ->
             { model | error = toString error } ! []
 
-        GetPaginatedContacts url ->
-            model ! [ getPaginatedContacts url ]
+        GetPaginatedContacts direction url ->
+            let
+                increment =
+                    case direction of
+                        Forward ->
+                            model.contactsPerPage
+
+                        Backward ->
+                            0 - model.contactsPerPage
+            in
+                { model
+                    | startContactIndex = model.startContactIndex + increment
+                }
+                    ! [ getPaginatedContacts url ]
 
 
 
@@ -362,6 +382,15 @@ mainContent model =
 pagination : Model -> Html Msg
 pagination model =
     let
+        startIndex =
+            toString model.startContactIndex
+
+        endIndex =
+            if (model.startContactIndex + model.contactsPerPage - 1) > model.contactsCount then
+                toString model.contactsCount
+            else
+                toString (model.startContactIndex + model.contactsPerPage - 1)
+
         nextLinkUrl =
             Maybe.withDefault "" model.nextContactsUrl
 
@@ -373,8 +402,8 @@ pagination model =
                 span [] []
             else
                 span [ style [ ( "margin-right", "5px" ) ] ]
-                    [ a [ href "#", onClick (GetPaginatedContacts nextLinkUrl) ]
-                        [ text "next" ]
+                    [ a [ href "#", onClick (GetPaginatedContacts Forward nextLinkUrl) ]
+                        [ span [ class "glyphicon glyphicon-step-forward" ] [] ]
                     ]
 
         previousLink =
@@ -382,12 +411,13 @@ pagination model =
                 span [] []
             else
                 span [ style [ ( "margin-right", "5px" ) ] ]
-                    [ a [ href "#", onClick (GetPaginatedContacts previousLinkUrl) ]
-                        [ text "previous" ]
+                    [ a [ href "#", onClick (GetPaginatedContacts Backward previousLinkUrl) ]
+                        [ span [ class "glyphicon glyphicon-step-backward" ] [] ]
                     ]
     in
         div []
             [ previousLink
+            , span [] [ text (startIndex ++ "-" ++ endIndex ++ " of " ++ toString model.contactsCount) ]
             , nextLink
             ]
 
