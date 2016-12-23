@@ -36,6 +36,7 @@ type alias Model =
 type alias ContactsResponse =
     { count : Int
     , contacts : List Contact
+    , links : Links
     }
 
 
@@ -433,6 +434,37 @@ contactResponseDecoder =
     Json.Decode.Pipeline.decode ContactsResponse
         |> Json.Decode.Pipeline.required "contacts_count" Json.Decode.int
         |> Json.Decode.Pipeline.required "contacts" contactListDecoder
+        |> Json.Decode.Pipeline.optional "_links"
+            linksDecoder
+            { next = { url = "" }, previous = { url = "" } }
+
+
+linksDecoder : Json.Decode.Decoder Links
+linksDecoder =
+    Json.Decode.Pipeline.decode Links
+        |> Json.Decode.Pipeline.optional "next"
+            linkDecoder
+            { url = "" }
+        |> Json.Decode.Pipeline.optional "previous"
+            linkDecoder
+            { url = "" }
+
+
+linkDecoder : Json.Decode.Decoder Link
+linkDecoder =
+    Json.Decode.Pipeline.decode Link
+        |> Json.Decode.Pipeline.required "href" Json.Decode.string
+
+
+type alias Links =
+    { next : Link
+    , previous : Link
+    }
+
+
+type alias Link =
+    { url : String
+    }
 
 
 contactListDecoder : Json.Decode.Decoder (List Contact)
