@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Http
 import Json.Decode
 import Json.Decode.Pipeline
@@ -113,7 +114,7 @@ init =
     , lists = []
     , error = ""
     }
-        ! [ getContacts, getEmailLists, getTags ]
+        ! [ getContacts Nothing Nothing, getEmailLists, getTags ]
 
 
 type ContactFilterType
@@ -132,6 +133,7 @@ type Msg
     | FilterByState ContactFilterType
     | FilterByList String
     | FilterByTag String
+    | GetAllContacts
       --
     | UpdateSearchString String
     | Search
@@ -197,6 +199,15 @@ update msg model =
             }
                 ! []
 
+        GetAllContacts ->
+            model ! [ getContacts Nothing Nothing ]
+
+        FilterByList listId ->
+            model ! [ getContacts (Just listId) Nothing ]
+
+        FilterByTag tagId ->
+            model ! [ getContacts Nothing (Just tagId) ]
+
         ProcessContacts (Err error) ->
             { model | error = toString error } ! []
 
@@ -229,16 +240,14 @@ tableHeader =
 contactsTable : List Contact -> Html Msg
 contactsTable contacts =
     table [ class "table table-striped" ]
-        [ {- thead []
-             [ tr []
-                 [ th [] [ text "Last Name" ]
-                 , th [] [ text "First Name" ]
-                 , th [] [ text "Email" ]
-                 ]
-             ]
-               ,
-          -}
-          tbody []
+        [ thead []
+            [ tr []
+                [ th [] [ text "Last Name" ]
+                , th [] [ text "First Name" ]
+                , th [] [ text "Email" ]
+                ]
+            ]
+        , tbody []
             (contactRows contacts)
         ]
 
@@ -281,14 +290,18 @@ sidebar lists tags =
         , ul []
             [ li [] [ text "active" ]
             , li [] [ text "unsubscribed" ]
-            , li [] [ text "view all contacts" ]
+            , li [] [ a [ onClick GetAllContacts, href "#" ] [ text "view all contacts" ] ]
             ]
         , h4 []
             [ span [ class "label label-success" ] [ text "email lists" ]
             ]
         , ul []
             (List.map
-                (\list -> li [] [ text list.name ])
+                (\list ->
+                    li []
+                        [ a [ onClick (FilterByList list.id), href "#" ] [ text list.name ]
+                        ]
+                )
                 lists
             )
         , h4 []
@@ -296,7 +309,11 @@ sidebar lists tags =
             ]
         , ul []
             (List.map
-                (\list -> li [] [ text list.name ])
+                (\tag ->
+                    li []
+                        [ a [ onClick (FilterByTag tag.id), href "#" ] [ text tag.name ]
+                        ]
+                )
                 tags
             )
         ]
@@ -345,17 +362,27 @@ headers =
     ]
 
 
-getContacts : Cmd Msg
-getContacts =
+getContacts : Maybe String -> Maybe String -> Cmd Msg
+getContacts listId tagId =
     let
         url =
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&include=list_memberships,taggings"
+            case listId of
+                Nothing ->
+                    case tagId of
+                        Nothing ->
+                            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500"
+
+                        Just id ->
+                            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&tags=" ++ id
+
+                Just id ->
+                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&lists=" ++ id
     in
         Http.send ProcessContacts
             (Http.request
                 { method = "GET"
                 , headers = headers
-                , url = url
+                , url = Debug.log "URL: " url
                 , body = Http.emptyBody
                 , expect = Http.expectJson contactResponseDecoder
                 , timeout = Nothing
