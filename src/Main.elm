@@ -6,7 +6,6 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode
 import Json.Decode.Pipeline
-import ApiKeys
 
 
 main : Program Never Model Msg
