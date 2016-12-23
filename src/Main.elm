@@ -156,21 +156,25 @@ update msg model =
             { model
                 | contacts = response.contacts
                 , contactsCount = response.count
+                , error = ""
             }
                 ! []
 
         ProcessEmailLists (Ok response) ->
             { model
                 | lists = response.lists
+                , error = ""
             }
                 ! []
 
         ProcessTags (Ok response) ->
             { model
                 | tags = response.tags
+                , error = ""
             }
                 ! []
 
+        -- FIXME - These can be combined into a single action
         GetAllContacts ->
             { model
                 | contacts = []
@@ -203,6 +207,7 @@ update msg model =
             }
                 ! [ getContacts (ByTag tagId) model.contactsPerPage ]
 
+        -- FIXME - ^^^^^ These can be combined into a single action ^^^^^
         ProcessContacts (Err error) ->
             { model | error = toString error } ! []
 
@@ -391,19 +396,28 @@ headers =
 getContacts : ContactsFilterState -> Int -> Cmd Msg
 getContacts filter contactsPerPage =
     let
+        limitString =
+            "&limit=" ++ toString contactsPerPage
+
         url =
             case filter of
                 All ->
-                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500"
+                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true"
+                        ++ limitString
 
                 Unsubscribed ->
-                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&status=unsubscribed"
+                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&status=unsubscribed"
+                        ++ limitString
 
                 ByTag id ->
-                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&tags=" ++ id
+                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&tags="
+                        ++ id
+                        ++ limitString
 
                 ByList id ->
-                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&limit=500&lists=" ++ id
+                    "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&lists="
+                        ++ id
+                        ++ limitString
     in
         Http.send ProcessContacts
             (Http.request
