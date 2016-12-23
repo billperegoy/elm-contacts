@@ -26,7 +26,7 @@ type alias Model =
     { contactsCount : Int
     , contacts : List Contact
     , tags : List Tag
-    , lists : List List
+    , lists : List EmailList
     , error : String
     }
 
@@ -49,6 +49,22 @@ type alias Email =
     }
 
 
+type alias EmailListResponse =
+    { lists : List EmailList
+    }
+
+
+type alias EmailList =
+    { id : String
+    , name : String
+    }
+
+
+type alias TagsResponse =
+    { tags : List Tag
+    }
+
+
 type ContactState
     = NotSet
     | TempHold
@@ -58,11 +74,6 @@ type ContactState
     | OptOut
     | Deprecated
     | Active
-
-
-type alias EmailList =
-    { name : String
-    }
 
 
 type alias Phone =
@@ -89,7 +100,9 @@ type CustomField
 
 
 type alias Tag =
-    { name : String }
+    { id : String
+    , name : String
+    }
 
 
 init : ( Model, Cmd Msg )
@@ -100,7 +113,7 @@ init =
     , lists = []
     , error = ""
     }
-        ! [ getContacts ]
+        ! [ getContacts, getEmailLists, getTags ]
 
 
 type ContactFilterType
@@ -114,6 +127,8 @@ type ContactFilterType
 
 type Msg
     = ProcessContacts (Result Http.Error ContactsResponse)
+    | ProcessEmailLists (Result Http.Error EmailListResponse)
+    | ProcessTags (Result Http.Error TagsResponse)
     | FilterByState ContactFilterType
     | FilterByList String
     | FilterByTag String
@@ -170,7 +185,25 @@ update msg model =
             }
                 ! []
 
+        ProcessEmailLists (Ok response) ->
+            { model
+                | lists = response.lists
+            }
+                ! []
+
+        ProcessTags (Ok response) ->
+            { model
+                | tags = response.tags
+            }
+                ! []
+
         ProcessContacts (Err error) ->
+            { model | error = toString error } ! []
+
+        ProcessEmailLists (Err error) ->
+            { model | error = toString error } ! []
+
+        ProcessTags (Err error) ->
             { model | error = toString error } ! []
 
         _ ->
@@ -239,14 +272,33 @@ errors errorString =
         div [ class "alert alert-danger" ] [ text errorString ]
 
 
-sidebar : Html Msg
-sidebar =
+sidebar : List EmailList -> List Tag -> Html Msg
+sidebar lists tags =
     div [ class "col-md-3" ]
-        [ h2 []
-            [ span
-                [ class "label label-default" ]
-                [ text "sidebar" ]
+        [ h4 []
+            [ span [ class "label label-success" ] [ text "contacts" ]
             ]
+        , ul []
+            [ li [] [ text "active" ]
+            , li [] [ text "unsubscribed" ]
+            , li [] [ text "view all contacts" ]
+            ]
+        , h4 []
+            [ span [ class "label label-success" ] [ text "email lists" ]
+            ]
+        , ul []
+            (List.map
+                (\list -> li [] [ text list.name ])
+                lists
+            )
+        , h4 []
+            [ span [ class "label label-success" ] [ text "tags" ]
+            ]
+        , ul []
+            (List.map
+                (\list -> li [] [ text list.name ])
+                tags
+            )
         ]
 
 
@@ -265,7 +317,7 @@ view model =
         [ class "container" ]
         [ div
             [ class "row" ]
-            [ sidebar
+            [ (sidebar model.lists model.tags)
             , (mainContent model)
             ]
         ]
@@ -297,8 +349,7 @@ getContacts : Cmd Msg
 getContacts =
     let
         url =
-            --"https://api.cc.email/v3/contacts?limit=500&sort=contacts.last_name"
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true"
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/contacts?sort=contacts.last_name&include_count=true&include=list_memberships,taggings"
     in
         Http.send ProcessContacts
             (Http.request
@@ -307,6 +358,44 @@ getContacts =
                 , url = url
                 , body = Http.emptyBody
                 , expect = Http.expectJson contactResponseDecoder
+                , timeout = Nothing
+                , withCredentials = False
+                }
+            )
+
+
+getEmailLists : Cmd Msg
+getEmailLists =
+    let
+        url =
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
+    in
+        Http.send ProcessEmailLists
+            (Http.request
+                { method = "GET"
+                , headers = headers
+                , url = url
+                , body = Http.emptyBody
+                , expect = Http.expectJson emailListResponseDecoder
+                , timeout = Nothing
+                , withCredentials = False
+                }
+            )
+
+
+getTags : Cmd Msg
+getTags =
+    let
+        url =
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/tags"
+    in
+        Http.send ProcessTags
+            (Http.request
+                { method = "GET"
+                , headers = headers
+                , url = url
+                , body = Http.emptyBody
+                , expect = Http.expectJson tagsResponseDecoder
                 , timeout = Nothing
                 , withCredentials = False
                 }
@@ -337,3 +426,39 @@ emailDecoder : Json.Decode.Decoder Email
 emailDecoder =
     Json.Decode.Pipeline.decode Email
         |> Json.Decode.Pipeline.required "address" Json.Decode.string
+
+
+emailListResponseDecoder : Json.Decode.Decoder EmailListResponse
+emailListResponseDecoder =
+    Json.Decode.Pipeline.decode EmailListResponse
+        |> Json.Decode.Pipeline.required "lists" emailListListDecoder
+
+
+emailListListDecoder : Json.Decode.Decoder (List EmailList)
+emailListListDecoder =
+    Json.Decode.list emailListDecoder
+
+
+emailListDecoder : Json.Decode.Decoder EmailList
+emailListDecoder =
+    Json.Decode.Pipeline.decode EmailList
+        |> Json.Decode.Pipeline.required "list_id" Json.Decode.string
+        |> Json.Decode.Pipeline.required "name" Json.Decode.string
+
+
+tagsResponseDecoder : Json.Decode.Decoder TagsResponse
+tagsResponseDecoder =
+    Json.Decode.Pipeline.decode TagsResponse
+        |> Json.Decode.Pipeline.required "tags" tagListDecoder
+
+
+tagListDecoder : Json.Decode.Decoder (List Tag)
+tagListDecoder =
+    Json.Decode.list tagDecoder
+
+
+tagDecoder : Json.Decode.Decoder Tag
+tagDecoder =
+    Json.Decode.Pipeline.decode Tag
+        |> Json.Decode.Pipeline.required "tag_id" Json.Decode.string
+        |> Json.Decode.Pipeline.required "name" Json.Decode.string
