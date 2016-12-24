@@ -132,9 +132,11 @@ type Msg
     | SetContactsPerPage Int
     | ShowRenameListModal EmailList
     | UpdateNewListName String
+    | DeleteList String
     | CompleteListRename
     | AcknowledgeDialog
     | ProcessListPut (Result Http.Error EmailList)
+    | ProcessListDelete (Result Http.Error DeleteResponse)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -222,10 +224,17 @@ update msg model =
             { model | displayContactsPerPageMenu = True } ! []
 
         ShowRenameListModal list ->
-            { model | showRenameModal = True, activeList = Just list } ! []
+            { model
+                | showRenameModal = True
+                , activeList = Just list
+            }
+                ! []
 
         AcknowledgeDialog ->
             { model | showRenameModal = False } ! []
+
+        DeleteList id ->
+            model ! [ deleteList id ]
 
         CompleteListRename ->
             let
@@ -249,6 +258,16 @@ update msg model =
             { model | httpError = "" } ! [ getEmailLists ]
 
         ProcessListPut (Err error) ->
+            { model | httpError = errorString error } ! []
+
+        ProcessListDelete (Ok result) ->
+            { model
+                | httpError = ""
+                , activeList = Nothing
+            }
+                ! [ getEmailLists, getContacts All model.contactsPerPage ]
+
+        ProcessListDelete (Err error) ->
             { model | httpError = errorString error } ! []
 
 
@@ -389,7 +408,12 @@ sidebarLists lists =
                     , onClickNoDefault (ShowRenameListModal list)
                     ]
                     [ text "rename" ]
-                , a [ style [ ( "margin-left", "7px" ) ], href "#" ] [ text "delete" ]
+                , a
+                    [ style [ ( "margin-left", "7px" ) ]
+                    , href "#"
+                    , onClickNoDefault (DeleteList list.id)
+                    ]
+                    [ text "delete" ]
                 ]
     in
         div []
@@ -634,6 +658,37 @@ putList id newName =
         Http.send ProcessListPut request
 
 
+type alias DeleteResponse =
+    { activityId : String
+    }
+
+
+deleteResponseDecoder : Json.Decode.Decoder DeleteResponse
+deleteResponseDecoder =
+    Json.Decode.Pipeline.decode DeleteResponse
+        |> Json.Decode.Pipeline.required "activity_id" Json.Decode.string
+
+
+deleteList : String -> Cmd Msg
+deleteList id =
+    let
+        url =
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists/" ++ id
+
+        request =
+            Http.request
+                { method = "DELETE"
+                , headers = []
+                , url = url
+                , body = Http.emptyBody
+                , expect = Http.expectJson deleteResponseDecoder
+                , timeout = Nothing
+                , withCredentials = False
+                }
+    in
+        Http.send ProcessListDelete request
+
+
 contactResponseDecoder : Json.Decode.Decoder ContactsResponse
 contactResponseDecoder =
     Json.Decode.Pipeline.decode ContactsResponse
@@ -742,7 +797,9 @@ renameModal model =
             Html.form [ class "form-group" ]
                 [ input
                     [ class "form-control"
+                      -- FIXME - how to get default into modal
                     , placeholder currentName
+                      --, value currentName
                     , onInput UpdateNewListName
                     ]
                     []
