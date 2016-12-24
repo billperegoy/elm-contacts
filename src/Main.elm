@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode
 import Json.Decode.Pipeline
+import Dialog
 
 
 main : Program Never Model Msg
@@ -24,6 +25,7 @@ main =
 
 type alias Model =
     { contactsCount : Int
+    , displayContactsPerPageMenu : Bool
     , contactsPerPage : Int
     , contacts : List Contact
     , startContactIndex : Int
@@ -33,6 +35,7 @@ type alias Model =
     , tags : List Tag
     , lists : List EmailList
     , error : String
+    , shouldShowDialog : Bool
     }
 
 
@@ -97,6 +100,7 @@ init =
     in
         { contactsCount = 0
         , contactsPerPage = contactsPerPage
+        , displayContactsPerPageMenu = False
         , contacts = []
         , startContactIndex = 1
         , nextContactsUrl = Nothing
@@ -105,6 +109,7 @@ init =
         , tags = []
         , lists = []
         , error = ""
+        , shouldShowDialog = False
         }
             ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
 
@@ -119,7 +124,10 @@ type Msg
     | ProcessTags (Result Http.Error TagsResponse)
     | GetContacts ContactsFilterState
     | GetPaginatedContacts PaginationDirection String
+    | DisplaySetContactsPerPageMenu
     | SetContactsPerPage Int
+    | ShowDialog
+    | AcknowledgeDialog
 
 
 
@@ -244,8 +252,18 @@ update msg model =
             { model
                 | contactsPerPage = count
                 , startContactIndex = 1
+                , displayContactsPerPageMenu = False
             }
                 ! [ getContacts model.filterState count ]
+
+        DisplaySetContactsPerPageMenu ->
+            { model | displayContactsPerPageMenu = True } ! []
+
+        ShowDialog ->
+            { model | shouldShowDialog = True } ! []
+
+        AcknowledgeDialog ->
+            { model | shouldShowDialog = False } ! []
 
 
 
@@ -347,8 +365,8 @@ sidebar lists tags =
             ]
         , ul []
             [ li [] [ text "active" ]
-            , li [] [ a [ onClick (GetContacts Unsubscribed), href "#" ] [ text "unsubscribed" ] ]
-            , li [] [ a [ onClick (GetContacts All), href "#" ] [ text "view all contacts" ] ]
+            , li [] [ a [ onClickNoDefault (GetContacts Unsubscribed), href "#" ] [ text "unsubscribed" ] ]
+            , li [] [ a [ onClickNoDefault (GetContacts All), href "#" ] [ text "view all contacts" ] ]
             ]
         , h4 []
             [ span [ class "label label-success" ] [ text "email lists" ]
@@ -357,7 +375,7 @@ sidebar lists tags =
             (List.map
                 (\list ->
                     li []
-                        [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
+                        [ a [ onClickNoDefault (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
                         ]
                 )
                 lists
@@ -369,7 +387,7 @@ sidebar lists tags =
             (List.map
                 (\tag ->
                     li []
-                        [ a [ onClick (GetContacts (ByTag tag.id)), href "#" ] [ text tag.name ]
+                        [ a [ onClickNoDefault (GetContacts (ByTag tag.id)), href "#" ] [ text tag.name ]
                         ]
                 )
                 tags
@@ -383,19 +401,41 @@ mainContent model =
         [ (errors model.error)
         , (contactsCount model)
         , (contactsTable model.contacts)
-        , setContactsPerPage
+        , (setContactsPerPage model)
         , (pagination model)
         ]
 
 
-setContactsPerPage : Html Msg
-setContactsPerPage =
-    ul [ style [ ( "list-style-type", "none" ) ] ]
-        [ li [] [ a [ href "#", onClick (SetContactsPerPage 50) ] [ text "page size 50" ] ]
-        , li [] [ a [ href "#", onClick (SetContactsPerPage 100) ] [ text "page size 100" ] ]
-        , li [] [ a [ href "#", onClick (SetContactsPerPage 250) ] [ text "page size 250" ] ]
-        , li [] [ a [ href "#", onClick (SetContactsPerPage 500) ] [ text "page size 500" ] ]
-        ]
+setContactsPerPage : Model -> Html Msg
+setContactsPerPage model =
+    let
+        legalValues =
+            [ 50, 100, 250, 500 ]
+
+        displayString value =
+            "Show " ++ toString value ++ " rows per page"
+
+        contactListElement value =
+            li [] [ a [ href "#", onClickNoDefault (SetContactsPerPage value) ] [ text (displayString value) ] ]
+
+        menuHeader =
+            a [ href "#", onClickNoDefault DisplaySetContactsPerPageMenu ]
+                [ text (displayString model.contactsPerPage) ]
+
+        menu =
+            if model.displayContactsPerPageMenu then
+                ul [ style [ ( "list-style-type", "none" ) ] ]
+                    (List.map
+                        (\value -> contactListElement value)
+                        legalValues
+                    )
+            else
+                p [] []
+    in
+        div []
+            [ menuHeader
+            , menu
+            ]
 
 
 pagination : Model -> Html Msg
@@ -421,7 +461,7 @@ pagination model =
                 span [] []
             else
                 span [ style [ ( "margin-right", "5px" ) ] ]
-                    [ a [ href "#", onClick (GetPaginatedContacts Forward nextLinkUrl) ]
+                    [ a [ href "#", onClickNoDefault (GetPaginatedContacts Forward nextLinkUrl) ]
                         [ span [ class "glyphicon glyphicon-step-forward" ] [] ]
                     ]
 
@@ -430,7 +470,7 @@ pagination model =
                 span [] []
             else
                 span [ style [ ( "margin-right", "5px" ) ] ]
-                    [ a [ href "#", onClick (GetPaginatedContacts Backward previousLinkUrl) ]
+                    [ a [ href "#", onClickNoDefault (GetPaginatedContacts Backward previousLinkUrl) ]
                         [ span [ class "glyphicon glyphicon-step-backward" ] [] ]
                     ]
     in
@@ -449,6 +489,8 @@ view model =
             [ class "row" ]
             [ (sidebar model.lists model.tags)
             , (mainContent model)
+            , (modal model)
+            , button [ onClickNoDefault ShowDialog ] [ text "Open" ]
             ]
         ]
 
@@ -635,3 +677,30 @@ tagDecoder =
     Json.Decode.Pipeline.decode Tag
         |> Json.Decode.Pipeline.required "tag_id" Json.Decode.string
         |> Json.Decode.Pipeline.required "name" Json.Decode.string
+
+
+modal : Model -> Html Msg
+modal model =
+    Dialog.view
+        (if model.shouldShowDialog then
+            Just
+                { closeMessage = Just AcknowledgeDialog
+                , containerClass = Just "your-container-class"
+                , header = Just (text "Alert!")
+                , body = Just (p [] [ text "Let me tell you something important..." ])
+                , footer = Just (button [ class "button button-primary" ] [ text "Save" ])
+                }
+         else
+            Nothing
+        )
+
+
+onClickNoDefault : msg -> Attribute msg
+onClickNoDefault message =
+    let
+        config =
+            { stopPropagation = True
+            , preventDefault = True
+            }
+    in
+        onWithOptions "click" config (Json.Decode.succeed message)
