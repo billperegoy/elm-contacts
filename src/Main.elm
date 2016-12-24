@@ -227,8 +227,6 @@ update msg model =
         AcknowledgeDialog ->
             { model | showRenameModal = False } ! []
 
-        -- FIXME - don't want to update model here as the
-        --         PUT may not have worked.
         CompleteListRename ->
             let
                 id =
@@ -238,19 +236,9 @@ update msg model =
 
                         Just list ->
                             list.id
-
-                newElem list =
-                    if list.id == id then
-                        { list | name = model.newListName }
-                    else
-                        list
-
-                newLists =
-                    List.map (\list -> newElem list) model.lists
             in
                 { model
                     | showRenameModal = False
-                    , lists = newLists
                 }
                     ! [ putList id model.newListName ]
 
@@ -258,7 +246,7 @@ update msg model =
             { model | newListName = name } ! []
 
         ProcessListPut (Ok result) ->
-            { model | httpError = "" } ! []
+            { model | httpError = "" } ! [ getEmailLists ]
 
         ProcessListPut (Err error) ->
             { model | httpError = errorString error } ! []
