@@ -35,7 +35,9 @@ type alias Model =
     , tags : List Tag
     , lists : List EmailList
     , httpError : String
-    , shouldShowDialog : Bool
+    , showRenameModal : Bool
+    , activeList : Maybe EmailList
+    , newListName : String
     }
 
 
@@ -109,7 +111,9 @@ init =
         , tags = []
         , lists = []
         , httpError = ""
-        , shouldShowDialog = False
+        , showRenameModal = False
+        , activeList = Nothing
+        , newListName = ""
         }
             ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
 
@@ -126,8 +130,11 @@ type Msg
     | GetPaginatedContacts PaginationDirection String
     | DisplaySetContactsPerPageMenu
     | SetContactsPerPage Int
-    | ShowDialog
+    | ShowRenameListModal EmailList
+    | UpdateNewListName String
+    | CompleteListRename
     | AcknowledgeDialog
+    | ProcessListPut (Result Http.Error EmailList)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -214,11 +221,57 @@ update msg model =
         DisplaySetContactsPerPageMenu ->
             { model | displayContactsPerPageMenu = True } ! []
 
-        ShowDialog ->
-            { model | shouldShowDialog = True } ! []
+        ShowRenameListModal list ->
+            { model | showRenameModal = True, activeList = Just list } ! []
 
         AcknowledgeDialog ->
-            { model | shouldShowDialog = False } ! []
+            { model | showRenameModal = False } ! []
+
+        -- FIXME - don't want to update model here as the
+        --         PUT may not have worked.
+        CompleteListRename ->
+            let
+                id =
+                    case model.activeList of
+                        Nothing ->
+                            "bad"
+
+                        Just list ->
+                            list.id
+
+                newElem list =
+                    if list.id == id then
+                        { list | name = model.newListName }
+                    else
+                        list
+
+                newLists =
+                    List.map (\list -> newElem list) model.lists
+            in
+                { model
+                    | showRenameModal = False
+                    , lists = newLists
+                }
+                    ! [ putList id model.newListName ]
+
+        UpdateNewListName name ->
+            { model | newListName = name } ! []
+
+        ProcessListPut (Ok result) ->
+            { model | httpError = "" } ! []
+
+        ProcessListPut (Err error) ->
+            { model | httpError = errorString error } ! []
+
+
+errorString : Http.Error -> String
+errorString error =
+    case error of
+        Http.BadStatus response ->
+            "Bad Http Status: " ++ toString response.body
+
+        _ ->
+            toString error
 
 
 
@@ -339,7 +392,17 @@ sidebarLists lists =
     let
         listElement list =
             li []
-                [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ] ]
+                [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
+                , a
+                    [ style
+                        [ ( "margin-left", "7px" )
+                        ]
+                    , href "#"
+                    , onClickNoDefault (ShowRenameListModal list)
+                    ]
+                    [ text "rename" ]
+                , a [ style [ ( "margin-left", "7px" ) ], href "#" ] [ text "delete" ]
+                ]
     in
         div []
             [ h4 []
@@ -463,8 +526,7 @@ view model =
             [ class "row" ]
             [ (sidebar model.lists model.tags)
             , (mainContent model)
-            , (modal model)
-            , button [ onClickNoDefault ShowDialog ] [ text "Open" ]
+            , (renameModal model)
             ]
         ]
 
@@ -560,6 +622,30 @@ getTags =
         Http.send ProcessTags (Http.get url tagsResponseDecoder)
 
 
+putList : String -> String -> Cmd Msg
+putList id newName =
+    let
+        url =
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists/" ++ id
+
+        body =
+            Http.stringBody "application/json"
+                ("""{"name" : """ ++ "\"" ++ newName ++ "\"" ++ """, "favorite" : "false"}""")
+
+        request =
+            Http.request
+                { method = "PUT"
+                , headers = []
+                , url = url
+                , body = body
+                , expect = Http.expectJson emailListDecoder
+                , timeout = Nothing
+                , withCredentials = False
+                }
+    in
+        Http.send ProcessListPut request
+
+
 contactResponseDecoder : Json.Decode.Decoder ContactsResponse
 contactResponseDecoder =
     Json.Decode.Pipeline.decode ContactsResponse
@@ -653,20 +739,46 @@ tagDecoder =
         |> Json.Decode.Pipeline.required "name" Json.Decode.string
 
 
-modal : Model -> Html Msg
-modal model =
-    Dialog.view
-        (if model.shouldShowDialog then
-            Just
-                { closeMessage = Just AcknowledgeDialog
-                , containerClass = Just "your-container-class"
-                , header = Just (text "Alert!")
-                , body = Just (p [] [ text "Let me tell you something important..." ])
-                , footer = Just (button [ class "button button-primary" ] [ text "Save" ])
-                }
-         else
-            Nothing
-        )
+renameModal : Model -> Html Msg
+renameModal model =
+    let
+        currentName =
+            case model.activeList of
+                Nothing ->
+                    ""
+
+                Just list ->
+                    list.name
+
+        body =
+            Html.form [ class "form-group" ]
+                [ input
+                    [ class "form-control"
+                    , placeholder currentName
+                    , onInput UpdateNewListName
+                    ]
+                    []
+                ]
+    in
+        Dialog.view
+            (if model.showRenameModal then
+                Just
+                    { closeMessage = Just AcknowledgeDialog
+                    , containerClass = Just "your-container-class"
+                    , header = Just (h4 [] [ text "Rename List" ])
+                    , body = Just body
+                    , footer =
+                        Just
+                            (button
+                                [ class "button button-primary"
+                                , onClickNoDefault CompleteListRename
+                                ]
+                                [ text "Rename" ]
+                            )
+                    }
+             else
+                Nothing
+            )
 
 
 onClickNoDefault : msg -> Attribute msg
