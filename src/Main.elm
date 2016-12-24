@@ -130,51 +130,6 @@ type Msg
     | AcknowledgeDialog
 
 
-
-{--
-    | UpdateSearchString String
-    | Search
-    | ShowAdvancedSearchModal
-      --
-    | ShowAddListModal
-    | AddNewList String
-    | ShowListMenu
-    | ShowRenameListModal
-    | ShowDeleteListModal
-    | DeleteList String
-    | DeleteListAndContacts
-    | UpdateListName String String
-      --
-    | ShowAddTagModal
-    | AddNewTag String
-    | ShowTagMenu
-    | ShowRanmeTagModal
-    | ShowDeleteTagModal
-    | DeleteTag String
-    | DeleteTagAndContacts
-    | UpdateTagName String String
-      --
-    | SelectContact
-    | SelectAllContacts
-    | AddContactToLists
-    | RemoveContactFromLists
-      --
-    | ShowManageTagsModal
-    | SelectTag
-    | SearchForTag
-    | CreateNewTag
-    | SaveContactTagChanges
-      --
-    | ShowQuickSendModal
-    | DeleteContact
-      --
-    | AddSingleContact
-    | AddMultipleContacts
-    | UploadContacts
-    | ImportContacts
-    --}
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
