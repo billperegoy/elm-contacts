@@ -34,7 +34,7 @@ type alias Model =
     , filterState : ContactsFilterState
     , tags : List Tag
     , lists : List EmailList
-    , error : String
+    , httpError : String
     , shouldShowDialog : Bool
     }
 
@@ -108,7 +108,7 @@ init =
         , filterState = All
         , tags = []
         , lists = []
-        , error = ""
+        , httpError = ""
         , shouldShowDialog = False
         }
             ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
@@ -197,21 +197,21 @@ update msg model =
                     , contactsCount = response.count
                     , previousContactsUrl = previous
                     , nextContactsUrl = next
-                    , error = ""
+                    , httpError = ""
                 }
                     ! []
 
         ProcessEmailLists (Ok response) ->
             { model
                 | lists = response.lists
-                , error = ""
+                , httpError = ""
             }
                 ! []
 
         ProcessTags (Ok response) ->
             { model
                 | tags = response.tags
-                , error = ""
+                , httpError = ""
             }
                 ! []
 
@@ -225,13 +225,13 @@ update msg model =
                 ! [ getContacts filterState model.contactsPerPage ]
 
         ProcessContacts (Err error) ->
-            { model | error = toString error } ! []
+            { model | httpError = toString error } ! []
 
         ProcessEmailLists (Err error) ->
-            { model | error = toString error } ! []
+            { model | httpError = toString error } ! []
 
         ProcessTags (Err error) ->
-            { model | error = toString error } ! []
+            { model | httpError = toString error } ! []
 
         GetPaginatedContacts direction url ->
             let
@@ -357,48 +357,70 @@ errors errorString =
         div [ class "alert alert-danger" ] [ text errorString ]
 
 
-sidebar : List EmailList -> List Tag -> Html Msg
-sidebar lists tags =
-    div [ class "col-md-3" ]
+sidebarContacts : Html Msg
+sidebarContacts =
+    div []
         [ h4 []
             [ span [ class "label label-success" ] [ text "contacts" ]
             ]
         , ul []
             [ li [] [ text "active" ]
-            , li [] [ a [ onClickNoDefault (GetContacts Unsubscribed), href "#" ] [ text "unsubscribed" ] ]
-            , li [] [ a [ onClickNoDefault (GetContacts All), href "#" ] [ text "view all contacts" ] ]
+            , li []
+                [ a
+                    [ onClick (GetContacts Unsubscribed), href "#" ]
+                    [ text "unsubscribed" ]
+                ]
+            , li []
+                [ a
+                    [ onClick (GetContacts All), href "#" ]
+                    [ text "view all contacts" ]
+                ]
             ]
-        , h4 []
-            [ span [ class "label label-success" ] [ text "email lists" ]
+        ]
+
+
+sidebarLists : List EmailList -> Html Msg
+sidebarLists lists =
+    let
+        listElement list =
+            li []
+                [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ] ]
+    in
+        div []
+            [ h4 []
+                [ span [ class "label label-success" ] [ text "email lists" ]
+                ]
+            , ul []
+                (List.map (\list -> listElement list) lists)
             ]
-        , ul []
-            (List.map
-                (\list ->
-                    li []
-                        [ a [ onClickNoDefault (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
-                        ]
-                )
-                lists
-            )
-        , h4 []
-            [ span [ class "label label-success" ] [ text "tags" ]
+
+
+sidebarTags : List Tag -> Html Msg
+sidebarTags tags =
+    let
+        tagElement tag =
+            li []
+                [ a [ onClick (GetContacts (ByTag tag.id)), href "#" ] [ text tag.name ] ]
+    in
+        div []
+            [ h4 [] [ span [ class "label label-success" ] [ text "tags" ] ]
+            , ul [] (List.map (\tag -> tagElement tag) tags)
             ]
-        , ul []
-            (List.map
-                (\tag ->
-                    li []
-                        [ a [ onClickNoDefault (GetContacts (ByTag tag.id)), href "#" ] [ text tag.name ]
-                        ]
-                )
-                tags
-            )
+
+
+sidebar : List EmailList -> List Tag -> Html Msg
+sidebar lists tags =
+    div [ class "col-md-3" ]
+        [ sidebarContacts
+        , sidebarLists lists
+        , sidebarTags tags
         ]
 
 
 mainContent : Model -> Html Msg
 mainContent model =
     div [ class "col-md-9" ]
-        [ (errors model.error)
+        [ (errors model.httpError)
         , (contactsCount model)
         , (contactsTable model.contacts)
         , (setContactsPerPage model)
@@ -425,10 +447,7 @@ setContactsPerPage model =
         menu =
             if model.displayContactsPerPageMenu then
                 ul [ style [ ( "list-style-type", "none" ) ] ]
-                    (List.map
-                        (\value -> contactListElement value)
-                        legalValues
-                    )
+                    (List.map (\value -> contactListElement value) legalValues)
             else
                 p [] []
     in
