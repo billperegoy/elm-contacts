@@ -2,6 +2,8 @@ module HttpUtils exposing (..)
 
 import Json.Decode
 import Json.Decode.Pipeline
+import Html exposing (..)
+import Html.Events exposing (..)
 
 
 deleteResponseDecoder : Json.Decode.Decoder DeleteResponse
@@ -13,3 +15,14 @@ deleteResponseDecoder =
 type alias DeleteResponse =
     { activityId : String
     }
+
+
+onClickNoDefault : msg -> Attribute msg
+onClickNoDefault message =
+    let
+        config =
+            { stopPropagation = True
+            , preventDefault = True
+            }
+    in
+        onWithOptions "click" config (Json.Decode.succeed message)

@@ -8,7 +8,8 @@ import Contact exposing (..)
 import EmailList exposing (..)
 import Tag exposing (..)
 import Dialog
-import Json.Decode
+import SidebarView exposing (..)
+import HttpUtils exposing (..)
 
 
 tableHeader : Html Msg
@@ -98,82 +99,6 @@ errors errorString =
         div [ class "alert alert-danger" ] [ text errorString ]
 
 
-sidebarContacts : Html Msg
-sidebarContacts =
-    div []
-        [ h4 []
-            [ span [ class "label label-success" ] [ text "contacts" ]
-            ]
-        , ul []
-            [ li [] [ text "active" ]
-            , li []
-                [ a
-                    [ onClick (GetContacts Unsubscribed), href "#" ]
-                    [ text "unsubscribed" ]
-                ]
-            , li []
-                [ a
-                    [ onClick (GetContacts All), href "#" ]
-                    [ text "view all contacts" ]
-                ]
-            ]
-        ]
-
-
-sidebarLink : Msg -> String -> Html Msg
-sidebarLink msg label =
-    li []
-        [ a
-            [ style
-                [ ( "margin-left", "7px" )
-                ]
-            , href "#"
-            , onClickNoDefault msg
-            ]
-            [ text label ]
-        ]
-
-
-sidebarLists : List EmailList -> Html Msg
-sidebarLists lists =
-    let
-        listElement list =
-            li []
-                [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
-                , ul []
-                    [ sidebarLink (ShowRenameListModal list) "rename"
-                    , sidebarLink (DeleteList list.id) "delete"
-                    ]
-                ]
-    in
-        div []
-            [ h4 [] [ span [ class "label label-success" ] [ text "email lists" ] ]
-            , ul [] (List.map (\list -> listElement list) lists)
-            ]
-
-
-sidebarTags : List Tag -> Html Msg
-sidebarTags tags =
-    let
-        tagElement tag =
-            li []
-                [ a [ onClick (GetContacts (ByTag tag.id)), href "#" ] [ text tag.name ] ]
-    in
-        div []
-            [ h4 [] [ span [ class "label label-success" ] [ text "tags" ] ]
-            , ul [] (List.map (\tag -> tagElement tag) tags)
-            ]
-
-
-sidebar : List EmailList -> List Tag -> Html Msg
-sidebar lists tags =
-    div [ class "col-md-3" ]
-        [ sidebarContacts
-        , sidebarLists lists
-        , sidebarTags tags
-        ]
-
-
 mainContent : Model -> Html Msg
 mainContent model =
     div [ class "col-md-9" ]
@@ -250,11 +175,14 @@ pagination model =
                         [ span [ class "glyphicon glyphicon-step-backward" ] [] ]
                     ]
     in
-        div []
-            [ previousLink
-            , span [] [ text (startIndex ++ "-" ++ endIndex ++ " of " ++ toString model.contactsCount) ]
-            , nextLink
-            ]
+        if model.contactsCount == 0 then
+            div [] []
+        else
+            div []
+                [ previousLink
+                , span [] [ text (startIndex ++ "-" ++ endIndex ++ " of " ++ toString model.contactsCount) ]
+                , nextLink
+                ]
 
 
 view : Model -> Html Msg
@@ -312,14 +240,3 @@ renameModal model =
              else
                 Nothing
             )
-
-
-onClickNoDefault : msg -> Attribute msg
-onClickNoDefault message =
-    let
-        config =
-            { stopPropagation = True
-            , preventDefault = True
-            }
-    in
-        onWithOptions "click" config (Json.Decode.succeed message)

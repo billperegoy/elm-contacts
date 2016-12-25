@@ -1,7 +1,6 @@
 module Update exposing (..)
 
 import Model exposing (..)
-import Http
 import UpdateUtilities exposing (..)
 
 
