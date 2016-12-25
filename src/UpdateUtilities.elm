@@ -120,6 +120,7 @@ showRenameListModal model list =
     { model
         | showRenameModal = True
         , activeList = Just list
+        , activeListMenu = Nothing
     }
         ! []
 
@@ -135,7 +136,10 @@ closeRenameModal model =
 
 requestListDelete : Model -> String -> ( Model, Cmd Msg )
 requestListDelete model id =
-    model ! [ deleteList id ]
+    { model
+        | activeListMenu = Nothing
+    }
+        ! [ deleteList id ]
 
 
 completeListRename : Model -> ( Model, Cmd Msg )
@@ -179,6 +183,17 @@ processListDelete model =
         ! [ getEmailLists, getContacts All model.contactsPerPage ]
 
 
+setActiveListMenu : Model -> String -> ( Model, Cmd Msg )
+setActiveListMenu model id =
+    { model | activeListMenu = Just id } ! []
+
+
+
+--
+-- init
+--
+
+
 init : ( Model, Cmd Msg )
 init =
     let
@@ -199,6 +214,7 @@ init =
         , showRenameModal = False
         , activeList = Nothing
         , newListName = ""
+        , activeListMenu = Nothing
         }
             ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
 

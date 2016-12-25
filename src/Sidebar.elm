@@ -46,22 +46,40 @@ sidebarLink msg label =
         ]
 
 
-listElement : EmailList -> Html Msg
-listElement list =
-    li []
-        [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
-        , ul []
-            [ sidebarLink (ShowRenameListModal list) "rename"
-            , sidebarLink (DeleteList list.id) "delete"
+listElement : Maybe String -> EmailList -> Html Msg
+listElement activeMenu list =
+    let
+        matcher =
+            Maybe.withDefault "bogus" activeMenu
+
+        links =
+            if matcher == list.id then
+                ul [ style [ ( "list-style-type", "none" ) ] ]
+                    [ sidebarLink (ShowRenameListModal list) "rename"
+                    , sidebarLink (DeleteList list.id) "delete"
+                    ]
+            else
+                a
+                    [ class "caret"
+                    , href ""
+                    , onClickNoDefault (SetActiveListMenu list.id)
+                    ]
+                    []
+    in
+        li []
+            [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
+            , links
             ]
-        ]
 
 
-sidebarLists : List EmailList -> Html Msg
-sidebarLists lists =
+sidebarLists : Maybe String -> List EmailList -> Html Msg
+sidebarLists activeMenu lists =
     div []
-        [ h4 [] [ span [ class "label label-success" ] [ text "email lists" ] ]
-        , ul [] (List.map (\list -> listElement list) lists)
+        [ h4 []
+            [ span [ class "label label-success" ] [ text "email lists" ]
+            , a [ style [ ( "margin-left", "5px" ) ], href "#", onClickNoDefault ShowNewListModal ] [ span [ class "glyphicon glyphicon-plus" ] [] ]
+            ]
+        , ul [] (List.map (\list -> listElement activeMenu list) lists)
         ]
 
 
@@ -79,10 +97,10 @@ sidebarTags tags =
         ]
 
 
-view : List EmailList -> List Tag -> Html Msg
-view lists tags =
+view : Maybe String -> List EmailList -> List Tag -> Html Msg
+view activeMenu lists tags =
     div [ class "col-md-3" ]
         [ sidebarContacts
-        , sidebarLists lists
+        , sidebarLists activeMenu lists
         , sidebarTags tags
         ]

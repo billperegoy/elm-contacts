@@ -191,7 +191,7 @@ view model =
         [ class "container" ]
         [ div
             [ class "row" ]
-            [ (Sidebar.view model.lists model.tags)
+            [ (Sidebar.view model.activeListMenu model.lists model.tags)
             , (mainContent model)
             , (renameModal model)
             ]

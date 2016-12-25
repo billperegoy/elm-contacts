@@ -27,13 +27,8 @@ type alias Model =
     , showRenameModal : Bool
     , activeList : Maybe EmailList
     , newListName : String
+    , activeListMenu : Maybe String
     }
-
-
-
---
--- Msg
---
 
 
 type Msg
@@ -45,9 +40,11 @@ type Msg
     | DisplaySetContactsPerPageMenu
     | SetContactsPerPage Int
     | ShowRenameListModal EmailList
+    | ShowNewListModal
     | UpdateNewListName String
     | DeleteList String
     | CompleteListRename
     | CloseRenameModal
     | ProcessListPut (Result Http.Error EmailList)
     | ProcessListDelete (Result Http.Error DeleteResponse)
+    | SetActiveListMenu String

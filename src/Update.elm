@@ -63,3 +63,9 @@ update msg model =
 
         ProcessListDelete (Err error) ->
             listPutError model error
+
+        SetActiveListMenu id ->
+            setActiveListMenu model id
+
+        ShowNewListModal ->
+            model ! []
