@@ -231,7 +231,11 @@ update msg model =
                 ! []
 
         AcknowledgeDialog ->
-            { model | showRenameModal = False } ! []
+            { model
+                | showRenameModal = False
+                , httpError = ""
+            }
+                ! []
 
         DeleteList id ->
             model ! [ deleteList id ]
@@ -394,34 +398,35 @@ sidebarContacts =
         ]
 
 
+sidebarLink : Msg -> String -> Html Msg
+sidebarLink msg label =
+    li []
+        [ a
+            [ style
+                [ ( "margin-left", "7px" )
+                ]
+            , href "#"
+            , onClickNoDefault msg
+            ]
+            [ text label ]
+        ]
+
+
 sidebarLists : List EmailList -> Html Msg
 sidebarLists lists =
     let
         listElement list =
             li []
                 [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
-                , a
-                    [ style
-                        [ ( "margin-left", "7px" )
-                        ]
-                    , href "#"
-                    , onClickNoDefault (ShowRenameListModal list)
+                , ul []
+                    [ sidebarLink (ShowRenameListModal list) "rename"
+                    , sidebarLink (DeleteList list.id) "delete"
                     ]
-                    [ text "rename" ]
-                , a
-                    [ style [ ( "margin-left", "7px" ) ]
-                    , href "#"
-                    , onClickNoDefault (DeleteList list.id)
-                    ]
-                    [ text "delete" ]
                 ]
     in
         div []
-            [ h4 []
-                [ span [ class "label label-success" ] [ text "email lists" ]
-                ]
-            , ul []
-                (List.map (\list -> listElement list) lists)
+            [ h4 [] [ span [ class "label label-success" ] [ text "email lists" ] ]
+            , ul [] (List.map (\list -> listElement list) lists)
             ]
 
 
