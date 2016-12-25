@@ -1,4 +1,4 @@
-module SidebarView exposing (..)
+module Sidebar exposing (view)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -46,39 +46,41 @@ sidebarLink msg label =
         ]
 
 
+listElement : EmailList -> Html Msg
+listElement list =
+    li []
+        [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
+        , ul []
+            [ sidebarLink (ShowRenameListModal list) "rename"
+            , sidebarLink (DeleteList list.id) "delete"
+            ]
+        ]
+
+
 sidebarLists : List EmailList -> Html Msg
 sidebarLists lists =
-    let
-        listElement list =
-            li []
-                [ a [ onClick (GetContacts (ByList list.id)), href "#" ] [ text list.name ]
-                , ul []
-                    [ sidebarLink (ShowRenameListModal list) "rename"
-                    , sidebarLink (DeleteList list.id) "delete"
-                    ]
-                ]
-    in
-        div []
-            [ h4 [] [ span [ class "label label-success" ] [ text "email lists" ] ]
-            , ul [] (List.map (\list -> listElement list) lists)
-            ]
+    div []
+        [ h4 [] [ span [ class "label label-success" ] [ text "email lists" ] ]
+        , ul [] (List.map (\list -> listElement list) lists)
+        ]
+
+
+tagElement : Tag -> Html Msg
+tagElement tag =
+    li []
+        [ a [ onClick (GetContacts (ByTag tag.id)), href "#" ] [ text tag.name ] ]
 
 
 sidebarTags : List Tag -> Html Msg
 sidebarTags tags =
-    let
-        tagElement tag =
-            li []
-                [ a [ onClick (GetContacts (ByTag tag.id)), href "#" ] [ text tag.name ] ]
-    in
-        div []
-            [ h4 [] [ span [ class "label label-success" ] [ text "tags" ] ]
-            , ul [] (List.map (\tag -> tagElement tag) tags)
-            ]
+    div []
+        [ h4 [] [ span [ class "label label-success" ] [ text "tags" ] ]
+        , ul [] (List.map (\tag -> tagElement tag) tags)
+        ]
 
 
-sidebar : List EmailList -> List Tag -> Html Msg
-sidebar lists tags =
+view : List EmailList -> List Tag -> Html Msg
+view lists tags =
     div [ class "col-md-3" ]
         [ sidebarContacts
         , sidebarLists lists

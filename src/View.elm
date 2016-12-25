@@ -8,7 +8,7 @@ import Contact exposing (..)
 import EmailList exposing (..)
 import Tag exposing (..)
 import Dialog
-import SidebarView exposing (..)
+import Sidebar
 import HttpUtils exposing (..)
 
 
@@ -191,7 +191,7 @@ view model =
         [ class "container" ]
         [ div
             [ class "row" ]
-            [ (sidebar model.lists model.tags)
+            [ (Sidebar.view model.lists model.tags)
             , (mainContent model)
             , (renameModal model)
             ]
