@@ -4,6 +4,9 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Model exposing (..)
+import Contact exposing (..)
+import EmailList exposing (..)
+import Tag exposing (..)
 import Dialog
 import Json.Decode
 

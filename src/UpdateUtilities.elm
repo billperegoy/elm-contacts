@@ -1,7 +1,10 @@
 module UpdateUtilities exposing (..)
 
-import Model exposing (..)
 import Http
+import Model exposing (..)
+import Contact exposing (..)
+import EmailList exposing (..)
+import Tag exposing (..)
 
 
 errorString : Http.Error -> String
