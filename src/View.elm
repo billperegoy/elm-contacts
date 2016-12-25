@@ -293,7 +293,7 @@ renameModal model =
         Dialog.view
             (if model.showRenameModal then
                 Just
-                    { closeMessage = Just AcknowledgeDialog
+                    { closeMessage = Just CloseRenameModal
                     , containerClass = Just "your-container-class"
                     , header = Just (h4 [] [ text "Rename List" ])
                     , body = Just body

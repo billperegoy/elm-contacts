@@ -2,149 +2,65 @@ module Update exposing (..)
 
 import Model exposing (..)
 import Http
+import UpdateUtilities exposing (..)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ProcessContacts (Ok response) ->
-            let
-                previous =
-                    if response.links.previous.url == "" then
-                        Nothing
-                    else
-                        Just response.links.previous.url
-
-                next =
-                    if response.links.next.url == "" then
-                        Nothing
-                    else
-                        Just response.links.next.url
-            in
-                { model
-                    | contacts = response.contacts
-                    , contactsCount = response.count
-                    , previousContactsUrl = previous
-                    , nextContactsUrl = next
-                    , httpError = ""
-                }
-                    ! []
+            processContacts model response
 
         ProcessEmailLists (Ok response) ->
-            { model
-                | lists = response.lists
-                , httpError = ""
-            }
-                ! []
+            processEmailLists model response
 
         ProcessTags (Ok response) ->
-            { model
-                | tags = response.tags
-                , httpError = ""
-            }
-                ! []
+            processTags model response
 
         GetContacts filterState ->
-            { model
-                | contacts = []
-                , contactsCount = 0
-                , startContactIndex = 1
-                , filterState = filterState
-            }
-                ! [ getContacts filterState model.contactsPerPage ]
+            requestContacts model filterState
 
         ProcessContacts (Err error) ->
-            { model | httpError = toString error } ! []
+            setErrors model error
 
         ProcessEmailLists (Err error) ->
-            { model | httpError = toString error } ! []
+            setErrors model error
 
         ProcessTags (Err error) ->
-            { model | httpError = toString error } ! []
+            setErrors model error
 
         GetPaginatedContacts direction url ->
-            let
-                increment =
-                    case direction of
-                        Forward ->
-                            model.contactsPerPage
-
-                        Backward ->
-                            0 - model.contactsPerPage
-            in
-                { model
-                    | startContactIndex = model.startContactIndex + increment
-                }
-                    ! [ getPaginatedContacts url ]
+            requestPaginatedContacts model direction url
 
         SetContactsPerPage count ->
-            { model
-                | contactsPerPage = count
-                , startContactIndex = 1
-                , displayContactsPerPageMenu = False
-            }
-                ! [ getContacts model.filterState count ]
+            setContactsPerPage model count
 
         DisplaySetContactsPerPageMenu ->
-            { model | displayContactsPerPageMenu = True } ! []
+            displaySetContactsPerPageMenu model
 
         ShowRenameListModal list ->
-            { model
-                | showRenameModal = True
-                , activeList = Just list
-            }
-                ! []
+            showRenameListModal model list
 
-        AcknowledgeDialog ->
-            { model
-                | showRenameModal = False
-                , httpError = ""
-            }
-                ! []
+        CloseRenameModal ->
+            closeRenameModal model
 
         DeleteList id ->
-            model ! [ deleteList id ]
+            requestListDelete model id
 
         CompleteListRename ->
-            let
-                id =
-                    case model.activeList of
-                        Nothing ->
-                            "bad"
-
-                        Just list ->
-                            list.id
-            in
-                { model
-                    | showRenameModal = False
-                }
-                    ! [ putList id model.newListName ]
+            completeListRename model
 
         UpdateNewListName name ->
-            { model | newListName = name } ! []
+            updateNewListName model name
 
-        ProcessListPut (Ok result) ->
-            { model | httpError = "" } ! [ getEmailLists ]
+        ProcessListPut (Ok _) ->
+            processListPut model
 
         ProcessListPut (Err error) ->
-            { model | httpError = errorString error } ! []
+            listPutError model error
 
-        ProcessListDelete (Ok result) ->
-            { model
-                | httpError = ""
-                , activeList = Nothing
-            }
-                ! [ getEmailLists, getContacts All model.contactsPerPage ]
+        ProcessListDelete (Ok _) ->
+            processListDelete model
 
         ProcessListDelete (Err error) ->
-            { model | httpError = errorString error } ! []
-
-
-errorString : Http.Error -> String
-errorString error =
-    case error of
-        Http.BadStatus response ->
-            "Bad Http Status: " ++ toString response.body
-
-        _ ->
-            toString error
+            listPutError model error

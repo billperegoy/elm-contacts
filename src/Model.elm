@@ -70,7 +70,7 @@ type Msg
     | UpdateNewListName String
     | DeleteList String
     | CompleteListRename
-    | AcknowledgeDialog
+    | CloseRenameModal
     | ProcessListPut (Result Http.Error EmailList)
     | ProcessListDelete (Result Http.Error DeleteResponse)
 
