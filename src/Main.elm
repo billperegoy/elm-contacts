@@ -515,7 +515,7 @@ pagination model =
                 span [] []
             else
                 span [ style [ ( "margin-right", "5px" ) ] ]
-                    [ a [ href "#", onClickNoDefault (GetPaginatedContacts Forward nextLinkUrl) ]
+                    [ a [ href "#", onClick (GetPaginatedContacts Forward nextLinkUrl) ]
                         [ span [ class "glyphicon glyphicon-step-forward" ] [] ]
                     ]
 
@@ -524,7 +524,7 @@ pagination model =
                 span [] []
             else
                 span [ style [ ( "margin-right", "5px" ) ] ]
-                    [ a [ href "#", onClickNoDefault (GetPaginatedContacts Backward previousLinkUrl) ]
+                    [ a [ href "#", onClick (GetPaginatedContacts Backward previousLinkUrl) ]
                         [ span [ class "glyphicon glyphicon-step-backward" ] [] ]
                     ]
     in
