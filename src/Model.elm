@@ -5,6 +5,11 @@ import Json.Decode
 import Json.Decode.Pipeline
 
 
+--
+-- Model
+--
+
+
 type alias Model =
     { contactsCount : Int
     , displayContactsPerPageMenu : Bool
@@ -20,92 +25,6 @@ type alias Model =
     , showRenameModal : Bool
     , activeList : Maybe EmailList
     , newListName : String
-    }
-
-
-type Msg
-    = ProcessContacts (Result Http.Error ContactsResponse)
-    | ProcessEmailLists (Result Http.Error EmailListResponse)
-    | ProcessTags (Result Http.Error TagsResponse)
-    | GetContacts ContactsFilterState
-    | GetPaginatedContacts PaginationDirection String
-    | DisplaySetContactsPerPageMenu
-    | SetContactsPerPage Int
-    | ShowRenameListModal EmailList
-    | UpdateNewListName String
-    | DeleteList String
-    | CompleteListRename
-    | AcknowledgeDialog
-    | ProcessListPut (Result Http.Error EmailList)
-    | ProcessListDelete (Result Http.Error DeleteResponse)
-
-
-type alias ContactsResponse =
-    { count : Int
-    , contacts : List Contact
-    , links : Links
-    }
-
-
-type alias Contact =
-    { firstName : Maybe String
-    , lastName : Maybe String
-    , email : Email
-    }
-
-
-type alias Email =
-    { address : String
-    }
-
-
-type alias EmailListResponse =
-    { lists : List EmailList
-    }
-
-
-type alias EmailList =
-    { id : String
-    , name : String
-    }
-
-
-type alias TagsResponse =
-    { tags : List Tag
-    }
-
-
-type alias Tag =
-    { id : String
-    , name : String
-    }
-
-
-type ContactsFilterState
-    = All
-    | Unsubscribed
-    | ByTag String
-    | ByList String
-
-
-type PaginationDirection
-    = Forward
-    | Backward
-
-
-type alias DeleteResponse =
-    { activityId : String
-    }
-
-
-type alias Links =
-    { next : Link
-    , previous : Link
-    }
-
-
-type alias Link =
-    { url : String
     }
 
 
@@ -133,71 +52,115 @@ init =
             ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
 
 
-getTags : Cmd Msg
-getTags =
-    let
-        url =
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/tags"
-    in
-        Http.send ProcessTags (Http.get url tagsResponseDecoder)
+
+--
+-- Msg
+--
 
 
-tagsResponseDecoder : Json.Decode.Decoder TagsResponse
-tagsResponseDecoder =
-    Json.Decode.Pipeline.decode TagsResponse
-        |> Json.Decode.Pipeline.required "tags" tagListDecoder
+type Msg
+    = ProcessContacts (Result Http.Error ContactsResponse)
+    | ProcessEmailLists (Result Http.Error EmailListResponse)
+    | ProcessTags (Result Http.Error TagsResponse)
+    | GetContacts ContactsFilterState
+    | GetPaginatedContacts PaginationDirection String
+    | DisplaySetContactsPerPageMenu
+    | SetContactsPerPage Int
+    | ShowRenameListModal EmailList
+    | UpdateNewListName String
+    | DeleteList String
+    | CompleteListRename
+    | AcknowledgeDialog
+    | ProcessListPut (Result Http.Error EmailList)
+    | ProcessListDelete (Result Http.Error DeleteResponse)
 
 
-tagListDecoder : Json.Decode.Decoder (List Tag)
-tagListDecoder =
-    Json.Decode.list tagDecoder
+
+--
+-- Contacts
+--
 
 
-tagDecoder : Json.Decode.Decoder Tag
-tagDecoder =
-    Json.Decode.Pipeline.decode Tag
-        |> Json.Decode.Pipeline.required "tag_id" Json.Decode.string
-        |> Json.Decode.Pipeline.required "name" Json.Decode.string
+type alias ContactsResponse =
+    { count : Int
+    , contacts : List Contact
+    , links : Links
+    }
 
 
-emailListResponseDecoder : Json.Decode.Decoder EmailListResponse
-emailListResponseDecoder =
-    Json.Decode.Pipeline.decode EmailListResponse
-        |> Json.Decode.Pipeline.required "lists" emailListListDecoder
+type alias Contact =
+    { firstName : Maybe String
+    , lastName : Maybe String
+    , email : Email
+    }
 
 
-emailListListDecoder : Json.Decode.Decoder (List EmailList)
-emailListListDecoder =
-    Json.Decode.list emailListDecoder
+type alias Email =
+    { address : String
+    }
 
 
-emailListDecoder : Json.Decode.Decoder EmailList
-emailListDecoder =
-    Json.Decode.Pipeline.decode EmailList
-        |> Json.Decode.Pipeline.required "list_id" Json.Decode.string
-        |> Json.Decode.Pipeline.required "name" Json.Decode.string
+type ContactsFilterState
+    = All
+    | Unsubscribed
+    | ByTag String
+    | ByList String
 
 
-emailDecoder : Json.Decode.Decoder Email
-emailDecoder =
-    Json.Decode.Pipeline.decode Email
-        |> Json.Decode.Pipeline.required "address" Json.Decode.string
+type PaginationDirection
+    = Forward
+    | Backward
 
 
-httpParams : List ( String, String ) -> String
-httpParams params =
-    let
-        paramStringList =
-            List.map (\( name, value ) -> name ++ "=" ++ value) params
-    in
-        String.join "&" paramStringList
+type alias Links =
+    { next : Link
+    , previous : Link
+    }
 
 
-urlString : String -> List ( String, String ) -> String
-urlString baseUrl params =
-    baseUrl
-        ++ "?"
-        ++ httpParams params
+type alias Link =
+    { url : String
+    }
+
+
+contactResponseDecoder : Json.Decode.Decoder ContactsResponse
+contactResponseDecoder =
+    Json.Decode.Pipeline.decode ContactsResponse
+        |> Json.Decode.Pipeline.required "contacts_count" Json.Decode.int
+        |> Json.Decode.Pipeline.required "contacts" contactListDecoder
+        |> Json.Decode.Pipeline.optional "_links"
+            linksDecoder
+            { next = { url = "" }, previous = { url = "" } }
+
+
+linksDecoder : Json.Decode.Decoder Links
+linksDecoder =
+    Json.Decode.Pipeline.decode Links
+        |> Json.Decode.Pipeline.optional "next"
+            linkDecoder
+            { url = "" }
+        |> Json.Decode.Pipeline.optional "previous"
+            linkDecoder
+            { url = "" }
+
+
+linkDecoder : Json.Decode.Decoder Link
+linkDecoder =
+    Json.Decode.Pipeline.decode Link
+        |> Json.Decode.Pipeline.required "href" Json.Decode.string
+
+
+contactListDecoder : Json.Decode.Decoder (List Contact)
+contactListDecoder =
+    Json.Decode.list contactDecoder
+
+
+contactDecoder : Json.Decode.Decoder Contact
+contactDecoder =
+    Json.Decode.Pipeline.decode Contact
+        |> Json.Decode.Pipeline.required "first_name" (Json.Decode.nullable Json.Decode.string)
+        |> Json.Decode.Pipeline.required "last_name" (Json.Decode.nullable Json.Decode.string)
+        |> Json.Decode.Pipeline.required "email_address" emailDecoder
 
 
 getContacts : ContactsFilterState -> Int -> Cmd Msg
@@ -244,13 +207,45 @@ getPaginatedContacts path =
         Http.send ProcessContacts (Http.get url contactResponseDecoder)
 
 
-getEmailLists : Cmd Msg
-getEmailLists =
-    let
-        url =
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
-    in
-        Http.send ProcessEmailLists (Http.get url emailListResponseDecoder)
+
+--
+-- Lists
+--
+
+
+type alias EmailListResponse =
+    { lists : List EmailList
+    }
+
+
+type alias EmailList =
+    { id : String
+    , name : String
+    }
+
+
+emailListResponseDecoder : Json.Decode.Decoder EmailListResponse
+emailListResponseDecoder =
+    Json.Decode.Pipeline.decode EmailListResponse
+        |> Json.Decode.Pipeline.required "lists" emailListListDecoder
+
+
+emailListListDecoder : Json.Decode.Decoder (List EmailList)
+emailListListDecoder =
+    Json.Decode.list emailListDecoder
+
+
+emailListDecoder : Json.Decode.Decoder EmailList
+emailListDecoder =
+    Json.Decode.Pipeline.decode EmailList
+        |> Json.Decode.Pipeline.required "list_id" Json.Decode.string
+        |> Json.Decode.Pipeline.required "name" Json.Decode.string
+
+
+emailDecoder : Json.Decode.Decoder Email
+emailDecoder =
+    Json.Decode.Pipeline.decode Email
+        |> Json.Decode.Pipeline.required "address" Json.Decode.string
 
 
 putList : String -> String -> Cmd Msg
@@ -277,12 +272,6 @@ putList id newName =
         Http.send ProcessListPut request
 
 
-deleteResponseDecoder : Json.Decode.Decoder DeleteResponse
-deleteResponseDecoder =
-    Json.Decode.Pipeline.decode DeleteResponse
-        |> Json.Decode.Pipeline.required "activity_id" Json.Decode.string
-
-
 deleteList : String -> Cmd Msg
 deleteList id =
     let
@@ -303,41 +292,87 @@ deleteList id =
         Http.send ProcessListDelete request
 
 
-contactResponseDecoder : Json.Decode.Decoder ContactsResponse
-contactResponseDecoder =
-    Json.Decode.Pipeline.decode ContactsResponse
-        |> Json.Decode.Pipeline.required "contacts_count" Json.Decode.int
-        |> Json.Decode.Pipeline.required "contacts" contactListDecoder
-        |> Json.Decode.Pipeline.optional "_links"
-            linksDecoder
-            { next = { url = "" }, previous = { url = "" } }
+getEmailLists : Cmd Msg
+getEmailLists =
+    let
+        url =
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
+    in
+        Http.send ProcessEmailLists (Http.get url emailListResponseDecoder)
 
 
-linksDecoder : Json.Decode.Decoder Links
-linksDecoder =
-    Json.Decode.Pipeline.decode Links
-        |> Json.Decode.Pipeline.optional "next"
-            linkDecoder
-            { url = "" }
-        |> Json.Decode.Pipeline.optional "previous"
-            linkDecoder
-            { url = "" }
+
+--
+-- Tags
+--
 
 
-linkDecoder : Json.Decode.Decoder Link
-linkDecoder =
-    Json.Decode.Pipeline.decode Link
-        |> Json.Decode.Pipeline.required "href" Json.Decode.string
+type alias TagsResponse =
+    { tags : List Tag
+    }
 
 
-contactListDecoder : Json.Decode.Decoder (List Contact)
-contactListDecoder =
-    Json.Decode.list contactDecoder
+type alias Tag =
+    { id : String
+    , name : String
+    }
 
 
-contactDecoder : Json.Decode.Decoder Contact
-contactDecoder =
-    Json.Decode.Pipeline.decode Contact
-        |> Json.Decode.Pipeline.required "first_name" (Json.Decode.nullable Json.Decode.string)
-        |> Json.Decode.Pipeline.required "last_name" (Json.Decode.nullable Json.Decode.string)
-        |> Json.Decode.Pipeline.required "email_address" emailDecoder
+getTags : Cmd Msg
+getTags =
+    let
+        url =
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/tags"
+    in
+        Http.send ProcessTags (Http.get url tagsResponseDecoder)
+
+
+tagsResponseDecoder : Json.Decode.Decoder TagsResponse
+tagsResponseDecoder =
+    Json.Decode.Pipeline.decode TagsResponse
+        |> Json.Decode.Pipeline.required "tags" tagListDecoder
+
+
+tagListDecoder : Json.Decode.Decoder (List Tag)
+tagListDecoder =
+    Json.Decode.list tagDecoder
+
+
+tagDecoder : Json.Decode.Decoder Tag
+tagDecoder =
+    Json.Decode.Pipeline.decode Tag
+        |> Json.Decode.Pipeline.required "tag_id" Json.Decode.string
+        |> Json.Decode.Pipeline.required "name" Json.Decode.string
+
+
+
+--
+-- Utilities
+--
+
+
+httpParams : List ( String, String ) -> String
+httpParams params =
+    let
+        paramStringList =
+            List.map (\( name, value ) -> name ++ "=" ++ value) params
+    in
+        String.join "&" paramStringList
+
+
+urlString : String -> List ( String, String ) -> String
+urlString baseUrl params =
+    baseUrl
+        ++ "?"
+        ++ httpParams params
+
+
+deleteResponseDecoder : Json.Decode.Decoder DeleteResponse
+deleteResponseDecoder =
+    Json.Decode.Pipeline.decode DeleteResponse
+        |> Json.Decode.Pipeline.required "activity_id" Json.Decode.string
+
+
+type alias DeleteResponse =
+    { activityId : String
+    }
