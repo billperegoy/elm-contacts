@@ -43,8 +43,8 @@ type Msg
     | ShowNewListModal
     | UpdateNewListName String
     | DeleteList String
-    | CompleteListRename
+    | SubmitListRename
     | CloseRenameModal
-    | ProcessListPut (Result Http.Error EmailList)
+    | CompleteListRename (Result Http.Error EmailList)
     | ProcessListDelete (Result Http.Error DeleteResponse)
     | SetActiveListMenu String

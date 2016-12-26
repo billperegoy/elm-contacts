@@ -142,8 +142,8 @@ requestListDelete model id =
         ! [ deleteList id ]
 
 
-completeListRename : Model -> ( Model, Cmd Msg )
-completeListRename model =
+submitListRename : Model -> ( Model, Cmd Msg )
+submitListRename model =
     let
         id =
             case model.activeList of
@@ -153,9 +153,7 @@ completeListRename model =
                 Just list ->
                     list.id
     in
-        { model
-            | showRenameModal = False
-        }
+        model
             ! [ putList id model.newListName ]
 
 
@@ -164,13 +162,13 @@ updateNewListName model name =
     { model | newListName = name } ! []
 
 
-processListPut : Model -> ( Model, Cmd Msg )
-processListPut model =
-    { model | httpError = "" } ! [ getEmailLists ]
+completeListRename : Model -> ( Model, Cmd Msg )
+completeListRename model =
+    { model | httpError = "", showRenameModal = False } ! [ getEmailLists ]
 
 
-listPutError : Model -> Http.Error -> ( Model, Cmd Msg )
-listPutError model error =
+listHttpError : Model -> Http.Error -> ( Model, Cmd Msg )
+listHttpError model error =
     { model | httpError = errorString error } ! []
 
 
@@ -297,7 +295,7 @@ putList id newName =
                 , withCredentials = False
                 }
     in
-        Http.send ProcessListPut request
+        Http.send CompleteListRename request
 
 
 deleteList : String -> Cmd Msg

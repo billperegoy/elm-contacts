@@ -209,9 +209,16 @@ renameModal model =
                 Just list ->
                     list.name
 
+        errorPane =
+            if model.httpError /= "" then
+                div [ class "alert alert-danger" ] [ text model.httpError ]
+            else
+                div [] []
+
         body =
             Html.form [ class "form-group" ]
-                [ input
+                [ errorPane
+                , input
                     [ class "form-control"
                       -- FIXME - how to get default into modal
                     , placeholder currentName
@@ -232,7 +239,7 @@ renameModal model =
                         Just
                             (button
                                 [ class "button button-primary"
-                                , onClickNoDefault CompleteListRename
+                                , onClickNoDefault SubmitListRename
                                 ]
                                 [ text "Rename" ]
                             )

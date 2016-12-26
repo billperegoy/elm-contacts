@@ -46,23 +46,23 @@ update msg model =
         DeleteList id ->
             requestListDelete model id
 
-        CompleteListRename ->
-            completeListRename model
+        SubmitListRename ->
+            submitListRename model
 
         UpdateNewListName name ->
             updateNewListName model name
 
-        ProcessListPut (Ok _) ->
-            processListPut model
+        CompleteListRename (Ok _) ->
+            completeListRename model
 
-        ProcessListPut (Err error) ->
-            listPutError model error
+        CompleteListRename (Err error) ->
+            listHttpError model error
 
         ProcessListDelete (Ok _) ->
             processListDelete model
 
         ProcessListDelete (Err error) ->
-            listPutError model error
+            listHttpError model error
 
         SetActiveListMenu id ->
             setActiveListMenu model id
