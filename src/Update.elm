@@ -16,8 +16,8 @@ update msg model =
         ProcessTags (Ok response) ->
             processTags model response
 
-        GetContacts filterState ->
-            requestContacts model filterState
+        GetContacts contactsFilterState ->
+            requestContacts model contactsFilterState
 
         ProcessContacts (Err error) ->
             setErrors model error

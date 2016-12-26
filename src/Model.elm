@@ -13,18 +13,18 @@ import HttpUtils exposing (..)
 
 
 type alias Model =
-    { contactsCount : Int
+    { contacts : List Contact
+    , contactsCount : Int
     , displayContactsPerPageMenu : Bool
     , contactsPerPage : Int
-    , contacts : List Contact
     , startContactIndex : Int
     , nextContactsUrl : Maybe String
     , previousContactsUrl : Maybe String
-    , filterState : ContactsFilterState
+    , contactsFilterState : ContactsFilterState
     , tags : List Tag
-    , lists : List EmailList
     , httpError : String
     , showRenameModal : Bool
+    , lists : List EmailList
     , activeList : Maybe EmailList
     , newListName : String
     , activeListMenu : Maybe String

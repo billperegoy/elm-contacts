@@ -17,6 +17,7 @@ type alias EmailListResponse =
 type alias EmailList =
     { id : String
     , name : String
+    , favorite : Bool
     }
 
 
@@ -36,3 +37,4 @@ emailListDecoder =
     Json.Decode.Pipeline.decode EmailList
         |> Json.Decode.Pipeline.required "list_id" Json.Decode.string
         |> Json.Decode.Pipeline.required "name" Json.Decode.string
+        |> Json.Decode.Pipeline.required "favorite" Json.Decode.bool

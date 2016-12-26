@@ -55,7 +55,7 @@ tagName id tags =
     tags
         |> List.filter (\tag -> tag.id == id)
         |> List.head
-        |> Maybe.withDefault { name = "unknown", id = "inknown" }
+        |> Maybe.withDefault { name = "unknown", id = "unknown" }
         |> .name
 
 
@@ -64,7 +64,7 @@ listName id lists =
     lists
         |> List.filter (\list -> list.id == id)
         |> List.head
-        |> Maybe.withDefault { name = "unknown", id = "inknown" }
+        |> Maybe.withDefault { name = "unknown", favorite = False, id = "unknown" }
         |> .name
 
 
@@ -72,7 +72,7 @@ contactsCount : Model -> Html Msg
 contactsCount model =
     let
         displayText =
-            case model.filterState of
+            case model.contactsFilterState of
                 All ->
                     "All Contacts (" ++ toString model.contactsCount ++ ")"
 

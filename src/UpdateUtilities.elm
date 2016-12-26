@@ -68,14 +68,14 @@ processTags model response =
 
 
 requestContacts : Model -> ContactsFilterState -> ( Model, Cmd Msg )
-requestContacts model filterState =
+requestContacts model contactsFilterState =
     { model
         | contacts = []
         , contactsCount = 0
         , startContactIndex = 1
-        , filterState = filterState
+        , contactsFilterState = contactsFilterState
     }
-        ! [ getContacts filterState model.contactsPerPage ]
+        ! [ getContacts contactsFilterState model.contactsPerPage ]
 
 
 setErrors : Model -> Http.Error -> ( Model, Cmd Msg )
@@ -107,7 +107,7 @@ setContactsPerPage model count =
         , startContactIndex = 1
         , displayContactsPerPageMenu = False
     }
-        ! [ getContacts model.filterState count ]
+        ! [ getContacts model.contactsFilterState count ]
 
 
 displaySetContactsPerPageMenu : Model -> ( Model, Cmd Msg )
@@ -207,7 +207,7 @@ init =
         , startContactIndex = 1
         , nextContactsUrl = Nothing
         , previousContactsUrl = Nothing
-        , filterState = All
+        , contactsFilterState = All
         , tags = []
         , lists = []
         , httpError = ""
@@ -273,6 +273,7 @@ getPaginatedContacts path =
 --
 -- Lists
 --
+-- FIXME - want to pass in the favorite value. We now force false.
 
 
 putList : String -> String -> Cmd Msg
