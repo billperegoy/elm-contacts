@@ -21,6 +21,7 @@ type alias Model =
     , nextContactsUrl : Maybe String
     , previousContactsUrl : Maybe String
     , contactsFilterState : ContactsFilterState
+    , listHttpAction : String
     , tags : List Tag
     , httpError : String
     , showRenameModal : Bool
@@ -43,7 +44,7 @@ type Msg
     | ShowNewListModal
     | UpdateNewListName String
     | DeleteList String
-    | SubmitListRename
+    | SubmitListAction
     | CloseRenameModal
     | CompleteListRename (Result Http.Error EmailList)
     | ProcessListDelete (Result Http.Error DeleteResponse)

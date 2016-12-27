@@ -239,7 +239,7 @@ renameModal model =
                         Just
                             (button
                                 [ class "button button-primary"
-                                , onClickNoDefault SubmitListRename
+                                , onClickNoDefault SubmitListAction
                                 ]
                                 [ text "Rename" ]
                             )

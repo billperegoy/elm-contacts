@@ -46,8 +46,8 @@ update msg model =
         DeleteList id ->
             requestListDelete model id
 
-        SubmitListRename ->
-            submitListRename model
+        SubmitListAction ->
+            submitListAction model
 
         UpdateNewListName name ->
             updateNewListName model name
@@ -68,4 +68,4 @@ update msg model =
             setActiveListMenu model id
 
         ShowNewListModal ->
-            model ! []
+            showNewListModal model

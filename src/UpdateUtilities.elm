@@ -121,6 +121,17 @@ showRenameListModal model list =
         | showRenameModal = True
         , activeList = Just list
         , activeListMenu = Nothing
+        , listHttpAction = "PUT"
+    }
+        ! []
+
+
+showNewListModal : Model -> ( Model, Cmd Msg )
+showNewListModal model =
+    { model
+        | showRenameModal = True
+        , activeListMenu = Nothing
+        , listHttpAction = "POST"
     }
         ! []
 
@@ -142,8 +153,8 @@ requestListDelete model id =
         ! [ deleteList id ]
 
 
-submitListRename : Model -> ( Model, Cmd Msg )
-submitListRename model =
+submitListAction : Model -> ( Model, Cmd Msg )
+submitListAction model =
     let
         id =
             case model.activeList of
@@ -154,12 +165,15 @@ submitListRename model =
                     list.id
     in
         model
-            ! [ putList id model.newListName ]
+            ! [ listAction id model.newListName model.listHttpAction ]
 
 
 updateNewListName : Model -> String -> ( Model, Cmd Msg )
 updateNewListName model name =
-    { model | newListName = name } ! []
+    { model
+        | newListName = name
+    }
+        ! []
 
 
 completeListRename : Model -> ( Model, Cmd Msg )
@@ -206,6 +220,7 @@ init =
         , nextContactsUrl = Nothing
         , previousContactsUrl = Nothing
         , contactsFilterState = All
+        , listHttpAction = ""
         , tags = []
         , lists = []
         , httpError = ""
@@ -274,11 +289,14 @@ getPaginatedContacts path =
 -- FIXME - want to pass in the favorite value. We now force false.
 
 
-putList : String -> String -> Cmd Msg
-putList id newName =
+listAction : String -> String -> String -> Cmd Msg
+listAction id newName action =
     let
         url =
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists/" ++ id
+            if action == "POST" then
+                "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
+            else
+                "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists/" ++ id
 
         body =
             Http.stringBody "application/json"
@@ -286,7 +304,7 @@ putList id newName =
 
         request =
             Http.request
-                { method = "PUT"
+                { method = action
                 , headers = []
                 , url = url
                 , body = body
