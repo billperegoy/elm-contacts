@@ -26,3 +26,21 @@ onClickNoDefault message =
             }
     in
         onWithOptions "click" config (Json.Decode.succeed message)
+
+
+type alias V3ApiError =
+    { errorKey : String
+    , errorMessage : String
+    }
+
+
+v3ApiErrorDecoder : Json.Decode.Decoder V3ApiError
+v3ApiErrorDecoder =
+    Json.Decode.Pipeline.decode V3ApiError
+        |> Json.Decode.Pipeline.required "error_key" Json.Decode.string
+        |> Json.Decode.Pipeline.required "error_message" Json.Decode.string
+
+
+v3ApiErrorListDecoder : Json.Decode.Decoder (List V3ApiError)
+v3ApiErrorListDecoder =
+    Json.Decode.list v3ApiErrorDecoder
