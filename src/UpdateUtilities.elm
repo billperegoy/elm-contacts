@@ -63,7 +63,7 @@ processContacts model response =
             , contactsCount = response.count
             , previousContactsUrl = previous
             , nextContactsUrl = next
-            , httpError = ""
+            , httpError = Nothing
         }
             ! []
 
@@ -72,7 +72,7 @@ processEmailLists : Model -> EmailListResponse -> ( Model, Cmd Msg )
 processEmailLists model response =
     { model
         | lists = response.lists
-        , httpError = ""
+        , httpError = Nothing
     }
         ! []
 
@@ -81,7 +81,7 @@ processTags : Model -> TagsResponse -> ( Model, Cmd Msg )
 processTags model response =
     { model
         | tags = response.tags
-        , httpError = ""
+        , httpError = Nothing
     }
         ! []
 
@@ -99,7 +99,7 @@ requestContacts model contactsFilterState =
 
 setErrors : Model -> Http.Error -> ( Model, Cmd Msg )
 setErrors model error =
-    { model | httpError = toString error } ! []
+    { model | httpError = Just error } ! []
 
 
 requestPaginatedContacts : Model -> PaginationDirection -> String -> ( Model, Cmd Msg )
@@ -159,7 +159,7 @@ closeRenameModal : Model -> ( Model, Cmd Msg )
 closeRenameModal model =
     { model
         | showListNameModal = False
-        , httpError = ""
+        , httpError = Nothing
     }
         ! []
 
@@ -197,18 +197,22 @@ updateNewListName model name =
 
 completeListRename : Model -> ( Model, Cmd Msg )
 completeListRename model =
-    { model | httpError = "", showListNameModal = False } ! [ getEmailLists ]
+    { model
+        | httpError = Nothing
+        , showListNameModal = False
+    }
+        ! [ getEmailLists ]
 
 
 listHttpError : Model -> Http.Error -> ( Model, Cmd Msg )
 listHttpError model error =
-    { model | httpError = errorString error } ! []
+    { model | httpError = Just error } ! []
 
 
 processListDelete : Model -> ( Model, Cmd Msg )
 processListDelete model =
     { model
-        | httpError = ""
+        | httpError = Nothing
         , activeList = Nothing
     }
         ! [ getEmailLists, getContacts All model.contactsPerPage ]
@@ -239,7 +243,7 @@ init =
         , nextContactsUrl = Nothing
         , previousContactsUrl = Nothing
         , contactsFilterState = All
-        , httpError = ""
+        , httpError = Nothing
         , tags = []
         , lists = []
         , listHttpAction = Get

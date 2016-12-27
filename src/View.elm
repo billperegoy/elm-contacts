@@ -9,6 +9,7 @@ import EmailList exposing (..)
 import Tag exposing (..)
 import Dialog
 import Sidebar
+import Http
 import HttpUtils exposing (..)
 
 
@@ -91,12 +92,14 @@ contactsCount model =
             ]
 
 
-errors : String -> Html Msg
-errors errorString =
-    if errorString == "" then
-        div [] []
-    else
-        div [ class "alert alert-danger" ] [ text errorString ]
+errors : Maybe Http.Error -> Html Msg
+errors error =
+    case error of
+        Nothing ->
+            div [] []
+
+        Just errorValue ->
+            div [ class "alert alert-danger" ] [ text (toString errorValue) ]
 
 
 mainContent : Model -> Html Msg
@@ -216,10 +219,12 @@ renameModal model =
                 "Create"
 
         errorPane =
-            if model.httpError /= "" then
-                div [ class "alert alert-danger" ] [ text model.httpError ]
-            else
-                div [] []
+            case model.httpError of
+                Nothing ->
+                    div [] []
+
+                Just error ->
+                    div [ class "alert alert-danger" ] [ text (toString error) ]
 
         body =
             Html.form [ class "form-group" ]

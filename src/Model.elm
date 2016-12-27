@@ -22,7 +22,7 @@ type alias Model =
     , previousContactsUrl : Maybe String
     , contactsFilterState : ContactsFilterState
     , tags : List Tag
-    , httpError : String
+    , httpError : Maybe Http.Error
     , lists : List EmailList
     , showListNameModal : Bool
     , activeList : Maybe EmailList
