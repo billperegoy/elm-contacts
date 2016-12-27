@@ -191,7 +191,7 @@ view model =
         [ class "container" ]
         [ div
             [ class "row" ]
-            [ (Sidebar.view model.activeListMenu model.lists model.tags)
+            [ (Sidebar.view model.listMenuToShow model.lists model.tags)
             , (mainContent model)
             , (renameModal model)
             ]
@@ -235,7 +235,7 @@ renameModal model =
                 ]
     in
         Dialog.view
-            (if model.showRenameModal then
+            (if model.showListNameModal then
                 Just
                     { closeMessage = Just CloseRenameModal
                     , containerClass = Just "your-container-class"

@@ -21,14 +21,14 @@ type alias Model =
     , nextContactsUrl : Maybe String
     , previousContactsUrl : Maybe String
     , contactsFilterState : ContactsFilterState
-    , listHttpAction : String
     , tags : List Tag
     , httpError : String
-    , showRenameModal : Bool
+    , showListNameModal : Bool
     , lists : List EmailList
     , activeList : Maybe EmailList
     , newListName : String
-    , activeListMenu : Maybe String
+    , listMenuToShow : Maybe String
+    , listHttpAction : String
     }
 
 

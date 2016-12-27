@@ -137,9 +137,9 @@ displaySetContactsPerPageMenu model =
 showRenameListModal : Model -> EmailList -> ( Model, Cmd Msg )
 showRenameListModal model list =
     { model
-        | showRenameModal = True
+        | showListNameModal = True
         , activeList = Just list
-        , activeListMenu = Nothing
+        , listMenuToShow = Nothing
         , listHttpAction = "PUT"
     }
         ! []
@@ -148,8 +148,8 @@ showRenameListModal model list =
 showNewListModal : Model -> ( Model, Cmd Msg )
 showNewListModal model =
     { model
-        | showRenameModal = True
-        , activeListMenu = Nothing
+        | showListNameModal = True
+        , listMenuToShow = Nothing
         , listHttpAction = "POST"
     }
         ! []
@@ -158,7 +158,7 @@ showNewListModal model =
 closeRenameModal : Model -> ( Model, Cmd Msg )
 closeRenameModal model =
     { model
-        | showRenameModal = False
+        | showListNameModal = False
         , httpError = ""
     }
         ! []
@@ -167,7 +167,7 @@ closeRenameModal model =
 requestListDelete : Model -> String -> ( Model, Cmd Msg )
 requestListDelete model id =
     { model
-        | activeListMenu = Nothing
+        | listMenuToShow = Nothing
     }
         ! [ deleteList id ]
 
@@ -197,7 +197,7 @@ updateNewListName model name =
 
 completeListRename : Model -> ( Model, Cmd Msg )
 completeListRename model =
-    { model | httpError = "", showRenameModal = False } ! [ getEmailLists ]
+    { model | httpError = "", showListNameModal = False } ! [ getEmailLists ]
 
 
 listHttpError : Model -> Http.Error -> ( Model, Cmd Msg )
@@ -216,7 +216,7 @@ processListDelete model =
 
 setActiveListMenu : Model -> String -> ( Model, Cmd Msg )
 setActiveListMenu model id =
-    { model | activeListMenu = Just id } ! []
+    { model | listMenuToShow = Just id } ! []
 
 
 
@@ -243,10 +243,10 @@ init =
         , tags = []
         , lists = []
         , httpError = ""
-        , showRenameModal = False
+        , showListNameModal = False
         , activeList = Nothing
         , newListName = ""
-        , activeListMenu = Nothing
+        , listMenuToShow = Nothing
         }
             ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
 
