@@ -126,11 +126,11 @@ setContactsPerPage model =
             li [] [ a [ href "#", onClickNoDefault (SetContactsPerPage value) ] [ text (displayString value) ] ]
 
         menuHeader =
-            a [ href "#", onClickNoDefault DisplaySetContactsPerPageMenu ]
+            a [ href "#", onClickNoDefault DisplayContactsPerPageDropdown ]
                 [ text (displayString model.contactsPerPage) ]
 
         menu =
-            if model.displayContactsPerPageMenu then
+            if model.showContactsPerPageDropdown then
                 ul [ style [ ( "list-style-type", "none" ) ] ]
                     (List.map (\value -> contactListElement value) legalValues)
             else

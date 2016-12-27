@@ -34,8 +34,8 @@ update msg model =
         SetContactsPerPage count ->
             setContactsPerPage model count
 
-        DisplaySetContactsPerPageMenu ->
-            displaySetContactsPerPageMenu model
+        DisplayContactsPerPageDropdown ->
+            displayContactsPerPageDropdown model
 
         ShowRenameListModal list ->
             showRenameListModal model list

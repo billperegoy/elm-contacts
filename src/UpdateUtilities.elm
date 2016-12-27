@@ -90,14 +90,14 @@ setContactsPerPage model count =
     { model
         | contactsPerPage = count
         , startContactIndex = 1
-        , displayContactsPerPageMenu = False
+        , showContactsPerPageDropdown = False
     }
         ! [ getContacts model.contactsFilterState count ]
 
 
-displaySetContactsPerPageMenu : Model -> ( Model, Cmd Msg )
-displaySetContactsPerPageMenu model =
-    { model | displayContactsPerPageMenu = True } ! []
+displayContactsPerPageDropdown : Model -> ( Model, Cmd Msg )
+displayContactsPerPageDropdown model =
+    { model | showContactsPerPageDropdown = True } ! []
 
 
 showRenameListModal : Model -> EmailList -> ( Model, Cmd Msg )
@@ -203,7 +203,7 @@ init =
     in
         { contactsCount = 0
         , contactsPerPage = contactsPerPage
-        , displayContactsPerPageMenu = False
+        , showContactsPerPageDropdown = False
         , contacts = []
         , startContactIndex = 1
         , nextContactsUrl = Nothing

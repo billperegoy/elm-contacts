@@ -15,7 +15,7 @@ import HttpUtils exposing (..)
 type alias Model =
     { contacts : List Contact
     , contactsCount : Int
-    , displayContactsPerPageMenu : Bool
+    , showContactsPerPageDropdown : Bool
     , contactsPerPage : Int
     , startContactIndex : Int
     , nextContactsUrl : Maybe String
@@ -38,7 +38,7 @@ type Msg
     | ProcessTags (Result Http.Error TagsResponse)
     | GetContacts ContactsFilterState
     | GetPaginatedContacts PaginationDirection String
-    | DisplaySetContactsPerPageMenu
+    | DisplayContactsPerPageDropdown
     | SetContactsPerPage Int
     | ShowRenameListModal EmailList
     | ShowNewListModal
