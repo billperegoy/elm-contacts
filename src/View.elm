@@ -209,6 +209,12 @@ renameModal model =
                 Just list ->
                     list.name
 
+        buttonText =
+            if model.listHttpAction == "PUT" then
+                "Rename"
+            else
+                "Create"
+
         errorPane =
             if model.httpError /= "" then
                 div [ class "alert alert-danger" ] [ text model.httpError ]
@@ -233,7 +239,7 @@ renameModal model =
                 Just
                     { closeMessage = Just CloseRenameModal
                     , containerClass = Just "your-container-class"
-                    , header = Just (h4 [] [ text "Rename List" ])
+                    , header = Just (h4 [] [ text (buttonText ++ " List") ])
                     , body = Just body
                     , footer =
                         Just
@@ -241,7 +247,7 @@ renameModal model =
                                 [ class "button button-primary"
                                 , onClickNoDefault SubmitListAction
                                 ]
-                                [ text "Rename" ]
+                                [ text buttonText ]
                             )
                     }
              else
