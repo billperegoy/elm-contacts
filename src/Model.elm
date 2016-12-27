@@ -23,8 +23,8 @@ type alias Model =
     , contactsFilterState : ContactsFilterState
     , tags : List Tag
     , httpError : String
-    , showListNameModal : Bool
     , lists : List EmailList
+    , showListNameModal : Bool
     , activeList : Maybe EmailList
     , newListName : String
     , listMenuToShow : Maybe String
