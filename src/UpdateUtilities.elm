@@ -9,40 +9,6 @@ import HttpUtils exposing (..)
 import Json.Decode
 
 
-errorString : Http.Error -> String
-errorString error =
-    case error of
-        Http.BadUrl url ->
-            toString error
-
-        Http.Timeout ->
-            toString error
-
-        Http.NetworkError ->
-            toString error
-
-        Http.BadStatus response ->
-            let
-                decodedResponse =
-                    Json.Decode.decodeString v3ApiErrorListDecoder response.body
-            in
-                case decodedResponse of
-                    Ok result ->
-                        List.map .errorMessage result |> String.join " "
-
-                    Err err ->
-                        toString err
-
-        Http.BadPayload payload response ->
-            toString error
-
-
-
---
--- Functions
---
-
-
 processContacts : Model -> ContactsResponse -> ( Model, Cmd Msg )
 processContacts model response =
     let

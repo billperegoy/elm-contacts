@@ -4,6 +4,7 @@ import Json.Decode
 import Json.Decode.Pipeline
 import Html exposing (..)
 import Html.Events exposing (..)
+import Http
 
 
 type HttpAction
@@ -67,3 +68,31 @@ httpActionToString action =
 
         Delete ->
             "DELETE"
+
+
+errorString : Http.Error -> String
+errorString error =
+    case error of
+        Http.BadUrl url ->
+            toString error
+
+        Http.Timeout ->
+            toString error
+
+        Http.NetworkError ->
+            toString error
+
+        Http.BadStatus response ->
+            let
+                decodedResponse =
+                    Json.Decode.decodeString v3ApiErrorListDecoder response.body
+            in
+                case decodedResponse of
+                    Ok result ->
+                        List.map .errorMessage result |> String.join " "
+
+                    Err err ->
+                        toString err
+
+        Http.BadPayload payload response ->
+            toString error

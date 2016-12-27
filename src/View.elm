@@ -99,7 +99,7 @@ errors error =
             div [] []
 
         Just errorValue ->
-            div [ class "alert alert-danger" ] [ text (toString errorValue) ]
+            div [ class "alert alert-danger" ] [ text (errorString errorValue) ]
 
 
 mainContent : Model -> Html Msg
@@ -224,7 +224,7 @@ renameModal model =
                     div [] []
 
                 Just error ->
-                    div [ class "alert alert-danger" ] [ text (toString error) ]
+                    div [ class "alert alert-danger" ] [ text (errorString error) ]
 
         body =
             Html.form [ class "form-group" ]
