@@ -140,7 +140,7 @@ showRenameListModal model list =
         | showListNameModal = True
         , activeList = Just list
         , listMenuToShow = Nothing
-        , listHttpAction = "PUT"
+        , listHttpAction = Put
     }
         ! []
 
@@ -150,7 +150,7 @@ showNewListModal model =
     { model
         | showListNameModal = True
         , listMenuToShow = Nothing
-        , listHttpAction = "POST"
+        , listHttpAction = Post
     }
         ! []
 
@@ -239,7 +239,7 @@ init =
         , nextContactsUrl = Nothing
         , previousContactsUrl = Nothing
         , contactsFilterState = All
-        , listHttpAction = ""
+        , listHttpAction = Get
         , tags = []
         , lists = []
         , httpError = ""
@@ -308,11 +308,11 @@ getPaginatedContacts path =
 -- FIXME - want to pass in the favorite value. We now force false.
 
 
-listAction : String -> String -> String -> Cmd Msg
+listAction : String -> String -> HttpAction -> Cmd Msg
 listAction id newName action =
     let
         url =
-            if action == "POST" then
+            if action == Post then
                 "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
             else
                 "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists/" ++ id
@@ -323,7 +323,7 @@ listAction id newName action =
 
         request =
             Http.request
-                { method = action
+                { method = httpActionToString action
                 , headers = []
                 , url = url
                 , body = body

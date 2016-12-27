@@ -6,6 +6,13 @@ import Html exposing (..)
 import Html.Events exposing (..)
 
 
+type HttpAction
+    = Get
+    | Put
+    | Post
+    | Delete
+
+
 deleteResponseDecoder : Json.Decode.Decoder DeleteResponse
 deleteResponseDecoder =
     Json.Decode.Pipeline.decode DeleteResponse
@@ -44,3 +51,19 @@ v3ApiErrorDecoder =
 v3ApiErrorListDecoder : Json.Decode.Decoder (List V3ApiError)
 v3ApiErrorListDecoder =
     Json.Decode.list v3ApiErrorDecoder
+
+
+httpActionToString : HttpAction -> String
+httpActionToString action =
+    case action of
+        Get ->
+            "GET"
+
+        Put ->
+            "PUT"
+
+        Post ->
+            "POST"
+
+        Delete ->
+            "DELETE"

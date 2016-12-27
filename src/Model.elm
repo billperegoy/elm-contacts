@@ -28,7 +28,7 @@ type alias Model =
     , activeList : Maybe EmailList
     , newListName : String
     , listMenuToShow : Maybe String
-    , listHttpAction : String
+    , listHttpAction : HttpAction
     }
 
 

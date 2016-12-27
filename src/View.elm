@@ -210,7 +210,7 @@ renameModal model =
                     list.name
 
         buttonText =
-            if model.listHttpAction == "PUT" then
+            if model.listHttpAction == HttpUtils.Put then
                 "Rename"
             else
                 "Create"
