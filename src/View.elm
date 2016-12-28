@@ -25,9 +25,29 @@ headerInfoRow model =
             else
                 text
                     ((model.selectedContacts |> List.length |> toString) ++ " Selected")
+
+        manageMenu =
+            if (List.length model.selectedContacts) == 0 then
+                span [] []
+            else
+                span
+                    [ class "label label-primary"
+                    , style
+                        [ ( "margin-left"
+                          , "5px"
+                          )
+                        ]
+                    ]
+                    [ text "Manage Lists" ]
     in
         tr []
-            [ th [ colspan 4 ] [ infoLine ] ]
+            [ th [ colspan 4 ]
+                [ span []
+                    [ infoLine
+                    , manageMenu
+                    ]
+                ]
+            ]
 
 
 tableHeader : Model -> Html Msg
