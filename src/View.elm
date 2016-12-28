@@ -13,15 +13,34 @@ import Http
 import HttpUtils exposing (..)
 
 
-tableHeader : Html Msg
-tableHeader =
-    thead []
-        [ tr []
-            [ th [] [ text "Last Name" ]
-            , th [] [ text "First Name" ]
-            , th [] [ text "Email" ]
+tableHeader : Model -> Html Msg
+tableHeader model =
+    let
+        ids =
+            List.map .id model.contacts
+    in
+        thead []
+            [ tr []
+                [ th [ colspan 4 ]
+                    [ text
+                        ((model.contactsCount |> toString)
+                            ++ " Contacts. Select contacts to organize, export or remove... "
+                        )
+                    ]
+                ]
+            , tr []
+                [ th []
+                    [ input
+                        [ type_ "checkbox"
+                        , onCheck (SetCheckbox ids)
+                        ]
+                        []
+                    ]
+                , th [] [ text "Last Name" ]
+                , th [] [ text "First Name" ]
+                , th [] [ text "Email" ]
+                ]
             ]
-        ]
 
 
 tableBody : List Contact -> Html Msg
@@ -30,11 +49,11 @@ tableBody contacts =
         (contactRows contacts)
 
 
-contactsTable : List Contact -> Html Msg
-contactsTable contacts =
+contactsTable : Model -> Html Msg
+contactsTable model =
     table [ class "table table-striped" ]
-        [ tableHeader
-        , tableBody contacts
+        [ (tableHeader model)
+        , tableBody model.contacts
         ]
 
 
@@ -43,7 +62,14 @@ contactRows contacts =
     List.map
         (\contact ->
             tr []
-                [ td [] [ text (Maybe.withDefault "" contact.lastName) ]
+                [ td []
+                    [ input
+                        [ type_ "checkbox"
+                        , onCheck (SetCheckbox [ contact.id ])
+                        ]
+                        []
+                    ]
+                , td [] [ text (Maybe.withDefault "" contact.lastName) ]
                 , td [] [ text (Maybe.withDefault "" contact.firstName) ]
                 , td [] [ text contact.email.address ]
                 ]
@@ -107,7 +133,7 @@ mainContent model =
     div [ class "col-md-9" ]
         [ (errors model.httpError)
         , (contactsCount model)
-        , (contactsTable model.contacts)
+        , (contactsTable model)
         , (setContactsPerPage model)
         , (pagination model)
         ]

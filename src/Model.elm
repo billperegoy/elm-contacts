@@ -7,13 +7,9 @@ import Tag exposing (..)
 import HttpUtils exposing (..)
 
 
---
--- Model
---
-
-
 type alias Model =
     { contacts : List Contact
+    , selectedContacts : List String
     , contactsCount : Int
     , showContactsPerPageDropdown : Bool
     , contactsPerPage : Int
@@ -49,3 +45,4 @@ type Msg
     | CompleteListRename (Result Http.Error EmailList)
     | ProcessListDelete (Result Http.Error DeleteResponse)
     | SetActiveListMenu String
+    | SetCheckbox (List String) Bool

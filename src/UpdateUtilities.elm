@@ -189,10 +189,9 @@ setActiveListMenu model id =
     { model | listMenuToShow = Just id } ! []
 
 
-
---
--- init
---
+setCheckbox : Model -> List String -> Bool -> ( Model, Cmd Msg )
+setCheckbox model ids state =
+    model ! []
 
 
 init : ( Model, Cmd Msg )
@@ -205,6 +204,7 @@ init =
         , contactsPerPage = contactsPerPage
         , showContactsPerPageDropdown = False
         , contacts = []
+        , selectedContacts = []
         , startContactIndex = 1
         , nextContactsUrl = Nothing
         , previousContactsUrl = Nothing

@@ -17,7 +17,8 @@ type alias ContactsResponse =
 
 
 type alias Contact =
-    { firstName : Maybe String
+    { id : String
+    , firstName : Maybe String
     , lastName : Maybe String
     , email : Email
     }
@@ -86,6 +87,7 @@ contactListDecoder =
 contactDecoder : Json.Decode.Decoder Contact
 contactDecoder =
     Json.Decode.Pipeline.decode Contact
+        |> Json.Decode.Pipeline.required "contact_id" Json.Decode.string
         |> Json.Decode.Pipeline.required "first_name" (Json.Decode.nullable Json.Decode.string)
         |> Json.Decode.Pipeline.required "last_name" (Json.Decode.nullable Json.Decode.string)
         |> Json.Decode.Pipeline.required "email_address" emailDecoder

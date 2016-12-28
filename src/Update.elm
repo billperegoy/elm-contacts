@@ -69,3 +69,6 @@ update msg model =
 
         ShowNewListModal ->
             showNewListModal model
+
+        SetCheckbox ids state ->
+            setCheckbox model ids state
