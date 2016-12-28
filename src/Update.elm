@@ -72,3 +72,15 @@ update msg model =
 
         SetCheckbox id state ->
             setCheckbox model id state
+
+        SetListCheckbox id state ->
+            setListCheckbox model id state
+
+        ShowAddToListsModal ->
+            showAddToListModal model
+
+        CloseAddToListsModal ->
+            closeAddToListsModal model
+
+        SubmitAddContactsToList ->
+            { model | showAddToListsModal = False } ! []

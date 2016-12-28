@@ -31,14 +31,13 @@ headerInfoRow model =
                 span [] []
             else
                 span
-                    [ class "label label-primary"
-                    , style
+                    [ style
                         [ ( "margin-left"
                           , "5px"
                           )
                         ]
                     ]
-                    [ text "Manage Lists" ]
+                    [ a [ href "#", onClickNoDefault ShowAddToListsModal ] [ text "Add to Lists" ] ]
     in
         tr []
             [ th [ colspan 4 ]
@@ -253,6 +252,7 @@ view model =
             [ (Sidebar.view model.listMenuToShow model.lists model.tags)
             , (mainContent model)
             , (renameModal model)
+            , (addToListsModal model)
             ]
         ]
 
@@ -307,6 +307,84 @@ renameModal model =
                             (button
                                 [ class "button button-primary"
                                 , onClickNoDefault SubmitListAction
+                                ]
+                                [ text buttonText ]
+                            )
+                    }
+             else
+                Nothing
+            )
+
+
+addToListsModal : Model -> Html Msg
+addToListsModal model =
+    let
+        currentName =
+            case model.activeList of
+                Nothing ->
+                    ""
+
+                Just list ->
+                    list.name
+
+        buttonText =
+            if model.listHttpAction == HttpUtils.Put then
+                "Rename"
+            else
+                "Create"
+
+        errorPane =
+            case model.httpError of
+                Nothing ->
+                    div [] []
+
+                Just error ->
+                    div [ class "alert alert-danger" ] [ text (errorString error) ]
+
+        body =
+            Html.form [ class "form-group" ]
+                [ errorPane
+                , div []
+                    (List.map
+                        (\list ->
+                            p []
+                                [ input
+                                    [ type_ "checkbox"
+                                    , onCheck
+                                        (SetListCheckbox list.id)
+                                    ]
+                                    []
+                                , span [ style [ ( "margin-left", "4px" ) ] ]
+                                    [ text list.name ]
+                                ]
+                        )
+                        (model.lists
+                            |> List.take 10
+                        )
+                    )
+                , div [ class "alert alert-info" ]
+                    [ text
+                        (toString (model.selectedLists |> List.length)
+                            ++ " selected"
+                        )
+                    ]
+                ]
+
+        headerText =
+            "Add " ++ (toString (model.selectedContacts |> List.length)) ++ " contacts to lists"
+    in
+        Dialog.view
+            (if model.showAddToListsModal then
+                Just
+                    { closeMessage = Just CloseAddToListsModal
+                    , containerClass = Just "your-container-class"
+                    , header = Just (h4 [] [ text headerText ])
+                    , body = Just body
+                    , footer =
+                        Just
+                            (button
+                                [ class "button button-primary"
+                                , onClickNoDefault SubmitAddContactsToList
                                 ]
                                 [ text buttonText ]
                             )

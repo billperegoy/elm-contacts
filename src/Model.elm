@@ -10,6 +10,7 @@ import HttpUtils exposing (..)
 type alias Model =
     { contacts : List Contact
     , selectedContacts : List String
+    , selectedLists : List String
     , contactsCount : Int
     , showContactsPerPageDropdown : Bool
     , contactsPerPage : Int
@@ -25,6 +26,7 @@ type alias Model =
     , newListName : String
     , listMenuToShow : Maybe String
     , listHttpAction : HttpAction
+    , showAddToListsModal : Bool
     }
 
 
@@ -46,3 +48,7 @@ type Msg
     | ProcessListDelete (Result Http.Error DeleteResponse)
     | SetActiveListMenu String
     | SetCheckbox String Bool
+    | SetListCheckbox String Bool
+    | ShowAddToListsModal
+    | CloseAddToListsModal
+    | SubmitAddContactsToList

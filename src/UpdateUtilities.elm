@@ -26,6 +26,7 @@ processContacts model response =
     in
         { model
             | contacts = response.contacts
+            , selectedContacts = []
             , contactsCount = response.count
             , previousContactsUrl = previous
             , nextContactsUrl = next
@@ -111,6 +112,15 @@ showRenameListModal model list =
         ! []
 
 
+showAddToListModal : Model -> ( Model, Cmd Msg )
+showAddToListModal model =
+    { model
+        | showAddToListsModal = True
+        , selectedLists = []
+    }
+        ! []
+
+
 showNewListModal : Model -> ( Model, Cmd Msg )
 showNewListModal model =
     { model
@@ -125,6 +135,15 @@ closeRenameModal : Model -> ( Model, Cmd Msg )
 closeRenameModal model =
     { model
         | showListNameModal = False
+        , httpError = Nothing
+    }
+        ! []
+
+
+closeAddToListsModal : Model -> ( Model, Cmd Msg )
+closeAddToListsModal model =
+    { model
+        | showAddToListsModal = False
         , httpError = Nothing
     }
         ! []
@@ -201,6 +220,18 @@ setCheckbox model id state =
             ! []
 
 
+setListCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
+setListCheckbox model id state =
+    if state == True then
+        { model | selectedLists = id :: model.selectedLists } ! []
+    else
+        { model
+            | selectedLists =
+                List.filter (\e -> e /= id) model.selectedLists
+        }
+            ! []
+
+
 init : ( Model, Cmd Msg )
 init =
     let
@@ -212,6 +243,7 @@ init =
         , showContactsPerPageDropdown = False
         , contacts = []
         , selectedContacts = []
+        , selectedLists = []
         , startContactIndex = 1
         , nextContactsUrl = Nothing
         , previousContactsUrl = Nothing
@@ -224,6 +256,7 @@ init =
         , activeList = Nothing
         , newListName = ""
         , listMenuToShow = Nothing
+        , showAddToListsModal = False
         }
             ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
 
@@ -376,3 +409,16 @@ urlString baseUrl params =
     baseUrl
         ++ "?"
         ++ httpParams params
+
+
+
+{-
+    FIXME - To add contacts to list, use this endpoint
+   v3/accounts/1/activities/add_list_memberships
+
+   with this sort of body
+
+           {"list_ids" : ["71a8a40c-ca32-11e6-84bb-9801a7ab3685"],
+           "source" :
+           {"contact_ids" : ["cc5c9d86-ca32-11e6-99f7-9801a7ab3685"]}}
+-}
