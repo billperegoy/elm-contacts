@@ -4,11 +4,6 @@ import Json.Decode
 import Json.Decode.Pipeline
 
 
---
--- Lists
---
-
-
 type alias EmailListResponse =
     { lists : List EmailList
     }

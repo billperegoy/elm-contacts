@@ -4,11 +4,6 @@ import Json.Decode
 import Json.Decode.Pipeline
 
 
---
--- Contacts
---
-
-
 type alias ContactsResponse =
     { count : Int
     , contacts : List Contact

@@ -4,11 +4,6 @@ import Json.Decode
 import Json.Decode.Pipeline
 
 
---
--- Tags
---
-
-
 type alias TagsResponse =
     { tags : List Tag
     }
