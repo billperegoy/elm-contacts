@@ -189,9 +189,16 @@ setActiveListMenu model id =
     { model | listMenuToShow = Just id } ! []
 
 
-setCheckbox : Model -> List String -> Bool -> ( Model, Cmd Msg )
-setCheckbox model ids state =
-    model ! []
+setCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
+setCheckbox model id state =
+    if state == True then
+        { model | selectedContacts = id :: model.selectedContacts } ! []
+    else
+        { model
+            | selectedContacts =
+                List.filter (\e -> e /= id) model.selectedContacts
+        }
+            ! []
 
 
 init : ( Model, Cmd Msg )

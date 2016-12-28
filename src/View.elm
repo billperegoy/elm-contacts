@@ -13,6 +13,23 @@ import Http
 import HttpUtils exposing (..)
 
 
+headerInfoRow : Model -> Html Msg
+headerInfoRow model =
+    let
+        infoLine =
+            if (List.length model.selectedContacts) == 0 then
+                text
+                    ((model.contactsCount |> toString)
+                        ++ " Contacts. Select contacts to organize, export or remove... "
+                    )
+            else
+                text
+                    ((model.selectedContacts |> List.length |> toString) ++ " Selected")
+    in
+        tr []
+            [ th [ colspan 4 ] [ infoLine ] ]
+
+
 tableHeader : Model -> Html Msg
 tableHeader model =
     let
@@ -20,19 +37,12 @@ tableHeader model =
             List.map .id model.contacts
     in
         thead []
-            [ tr []
-                [ th [ colspan 4 ]
-                    [ text
-                        ((model.contactsCount |> toString)
-                            ++ " Contacts. Select contacts to organize, export or remove... "
-                        )
-                    ]
-                ]
+            [ headerInfoRow model
             , tr []
                 [ th []
                     [ input
                         [ type_ "checkbox"
-                        , onCheck (SetCheckbox ids)
+                          --, onCheck (SetCheckbox ids)
                         ]
                         []
                     ]
@@ -65,7 +75,7 @@ contactRows contacts =
                 [ td []
                     [ input
                         [ type_ "checkbox"
-                        , onCheck (SetCheckbox [ contact.id ])
+                        , onCheck (SetCheckbox contact.id)
                         ]
                         []
                     ]

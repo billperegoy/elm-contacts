@@ -45,4 +45,4 @@ type Msg
     | CompleteListRename (Result Http.Error EmailList)
     | ProcessListDelete (Result Http.Error DeleteResponse)
     | SetActiveListMenu String
-    | SetCheckbox (List String) Bool
+    | SetCheckbox String Bool
