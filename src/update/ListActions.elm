@@ -162,3 +162,8 @@ deleteList id =
                 }
     in
         Http.send ProcessListDelete request
+
+
+setActiveListMenu : Model -> String -> ( Model, Cmd Msg )
+setActiveListMenu model id =
+    { model | listMenuToShow = Just id } ! []
