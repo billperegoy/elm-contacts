@@ -6,6 +6,7 @@ import Update
 import View
 import Subscriptions
 import Contact
+import ContactActions
 import TagActions
 
 
@@ -21,7 +22,7 @@ main =
 
 initialActions : List (Cmd Model.Msg)
 initialActions =
-    [ Update.getContacts Contact.All 50
+    [ ContactActions.getContacts Contact.All 50
     , Update.getEmailLists
     , TagActions.getTags
     ]
