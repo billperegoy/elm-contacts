@@ -76,3 +76,4 @@ type Msg
     | ShowAddToListsModal
     | CloseAddToListsModal
     | SubmitAddContactsToList
+    | CompleteAddContactsToList (Result Http.Error DeleteResponse)

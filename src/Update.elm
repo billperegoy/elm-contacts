@@ -62,6 +62,12 @@ update msg model =
         CompleteListRename (Ok _) ->
             completeListRename model
 
+        CompleteAddContactsToList (Ok _) ->
+            model ! []
+
+        CompleteAddContactsToList (Err error) ->
+            setErrors model error
+
         CompleteListRename (Err error) ->
             listHttpError model error
 
@@ -90,7 +96,7 @@ update msg model =
             closeAddToListsModal model
 
         SubmitAddContactsToList ->
-            { model | showAddToListsModal = False } ! []
+            { model | showAddToListsModal = False } ! [ postAddContactsToLists model ]
 
 
 processContacts : Model -> ContactsResponse -> ( Model, Cmd Msg )
@@ -482,3 +488,41 @@ urlString baseUrl params =
            "source" :
            {"contact_ids" : ["cc5c9d86-ca32-11e6-99f7-9801a7ab3685"]}}
 -}
+
+
+postAddContactsToLists : Model -> Cmd Msg
+postAddContactsToLists model =
+    let
+        url =
+            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/activities/add_list_memberships"
+
+        listIds =
+            List.map Json.Encode.string model.selectedLists
+
+        contactIds =
+            List.map Json.Encode.string model.selectedContacts
+
+        contactIdsObj =
+            Json.Encode.object [ ( "contact_ids", Json.Encode.list contactIds ) ]
+
+        payload =
+            Json.Encode.object
+                [ ( "list_ids", Json.Encode.list listIds )
+                , ( "source", contactIdsObj )
+                ]
+
+        body =
+            Http.stringBody "application/json" (Json.Encode.encode 0 payload)
+
+        request =
+            Http.request
+                { method = httpActionToString Post
+                , headers = []
+                , url = url
+                , body = body
+                , expect = Http.expectJson deleteResponseDecoder
+                , timeout = Nothing
+                , withCredentials = False
+                }
+    in
+        Http.send CompleteAddContactsToList request
