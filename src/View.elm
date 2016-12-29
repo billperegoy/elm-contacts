@@ -11,6 +11,8 @@ import Dialog
 import Sidebar
 import Http
 import HttpUtils exposing (..)
+import AddToListModal
+import RenameModal
 
 
 headerInfoRow : Model -> Html Msg
@@ -251,144 +253,7 @@ view model =
             [ class "row" ]
             [ (Sidebar.view model.listMenuToShow model.lists model.tags)
             , (mainContent model)
-            , (renameModal model)
-            , (addToListsModal model)
+            , (RenameModal.view model)
+            , (AddToListModal.view model)
             ]
         ]
-
-
-renameModal : Model -> Html Msg
-renameModal model =
-    let
-        currentName =
-            case model.activeList of
-                Nothing ->
-                    ""
-
-                Just list ->
-                    list.name
-
-        buttonText =
-            if model.listHttpAction == HttpUtils.Put then
-                "Rename"
-            else
-                "Create"
-
-        errorPane =
-            case model.httpError of
-                Nothing ->
-                    div [] []
-
-                Just error ->
-                    div [ class "alert alert-danger" ] [ text (errorString error) ]
-
-        body =
-            Html.form [ class "form-group" ]
-                [ errorPane
-                , input
-                    [ class "form-control"
-                      -- FIXME - how to get default into modal
-                    , placeholder currentName
-                      --, value currentName
-                    , onInput UpdateNewListName
-                    ]
-                    []
-                ]
-    in
-        Dialog.view
-            (if model.showListNameModal then
-                Just
-                    { closeMessage = Just CloseRenameModal
-                    , containerClass = Just "your-container-class"
-                    , header = Just (h4 [] [ text (buttonText ++ " List") ])
-                    , body = Just body
-                    , footer =
-                        Just
-                            (button
-                                [ class "button button-primary"
-                                , onClickNoDefault SubmitListAction
-                                ]
-                                [ text buttonText ]
-                            )
-                    }
-             else
-                Nothing
-            )
-
-
-addToListsModal : Model -> Html Msg
-addToListsModal model =
-    let
-        currentName =
-            case model.activeList of
-                Nothing ->
-                    ""
-
-                Just list ->
-                    list.name
-
-        buttonText =
-            if model.listHttpAction == HttpUtils.Put then
-                "Rename"
-            else
-                "Create"
-
-        errorPane =
-            case model.httpError of
-                Nothing ->
-                    div [] []
-
-                Just error ->
-                    div [ class "alert alert-danger" ] [ text (errorString error) ]
-
-        body =
-            Html.form [ class "form-group" ]
-                [ errorPane
-                , div []
-                    (List.map
-                        (\list ->
-                            p []
-                                [ input
-                                    [ type_ "checkbox"
-                                    , onCheck
-                                        (SetListCheckbox list.id)
-                                    ]
-                                    []
-                                , span [ style [ ( "margin-left", "4px" ) ] ]
-                                    [ text list.name ]
-                                ]
-                        )
-                        (model.lists
-                            |> List.take 10
-                        )
-                    )
-                , div [ class "alert alert-info" ]
-                    [ text
-                        (toString (model.selectedLists |> List.length)
-                            ++ " selected"
-                        )
-                    ]
-                ]
-
-        headerText =
-            "Add " ++ (toString (model.selectedContacts |> List.length)) ++ " contacts to lists"
-    in
-        Dialog.view
-            (if model.showAddToListsModal then
-                Just
-                    { closeMessage = Just CloseAddToListsModal
-                    , containerClass = Just "your-container-class"
-                    , header = Just (h4 [] [ text headerText ])
-                    , body = Just body
-                    , footer =
-                        Just
-                            (button
-                                [ class "button button-primary"
-                                , onClickNoDefault SubmitAddContactsToList
-                                ]
-                                [ text buttonText ]
-                            )
-                    }
-             else
-                Nothing
-            )

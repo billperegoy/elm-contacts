@@ -477,19 +477,6 @@ urlString baseUrl params =
         ++ httpParams params
 
 
-
-{-
-    FIXME - To add contacts to list, use this endpoint
-   v3/accounts/1/activities/add_list_memberships
-
-   with this sort of body
-
-           {"list_ids" : ["71a8a40c-ca32-11e6-84bb-9801a7ab3685"],
-           "source" :
-           {"contact_ids" : ["cc5c9d86-ca32-11e6-99f7-9801a7ab3685"]}}
--}
-
-
 postAddContactsToLists : Model -> Cmd Msg
 postAddContactsToLists model =
     let
