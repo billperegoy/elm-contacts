@@ -9,6 +9,7 @@ import Tag exposing (..)
 import HttpUtils exposing (..)
 import Json.Decode
 import Json.Encode
+import HttpErrors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -18,7 +19,7 @@ update msg model =
             processContacts model response
 
         ProcessContacts (Err error) ->
-            setErrors model error
+            HttpErrors.setErrors model error
 
         GetContacts contactsFilterState ->
             requestContacts model contactsFilterState
@@ -37,7 +38,7 @@ update msg model =
             processEmailLists model response
 
         ProcessEmailLists (Err error) ->
-            setErrors model error
+            HttpErrors.setErrors model error
 
         ShowRenameListModal list ->
             showRenameListModal model list
@@ -92,14 +93,14 @@ update msg model =
             completeAddContactsToList model
 
         CompleteAddContactsToList (Err error) ->
-            setErrors model error
+            HttpErrors.setErrors model error
 
         --
         ProcessTags (Ok response) ->
             processTags model response
 
         ProcessTags (Err error) ->
-            setErrors model error
+            HttpErrors.setErrors model error
 
 
 processContacts : Model -> ContactsResponse -> ( Model, Cmd Msg )
@@ -155,11 +156,6 @@ requestContacts model contactsFilterState =
         , contactsFilterState = contactsFilterState
     }
         ! [ getContacts contactsFilterState model.contactsPerPage ]
-
-
-setErrors : Model -> Http.Error -> ( Model, Cmd Msg )
-setErrors model error =
-    { model | httpError = Just error } ! []
 
 
 requestPaginatedContacts : Model -> PaginationDirection -> String -> ( Model, Cmd Msg )
