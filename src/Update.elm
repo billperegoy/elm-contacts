@@ -8,6 +8,7 @@ import EmailList exposing (..)
 import Tag exposing (..)
 import HttpUtils exposing (..)
 import Json.Decode
+import Json.Encode
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -381,9 +382,14 @@ listAction id newName action =
             else
                 "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists/" ++ id
 
+        payload =
+            Json.Encode.object
+                [ ( "name", Json.Encode.string newName )
+                , ( "favorite", Json.Encode.bool False )
+                ]
+
         body =
-            Http.stringBody "application/json"
-                ("""{"name" : """ ++ "\"" ++ newName ++ "\"" ++ """, "favorite" : "false"}""")
+            Http.stringBody "application/json" (Json.Encode.encode 0 payload)
 
         request =
             Http.request
