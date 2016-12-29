@@ -1,4 +1,4 @@
-module AddContactsToListsActions exposing (..)
+module ContactListActions exposing (..)
 
 import Model exposing (..)
 import Http
@@ -6,8 +6,8 @@ import HttpUtils exposing (..)
 import Json.Encode
 
 
-showAddContactsToListModal : Model -> ( Model, Cmd Msg )
-showAddContactsToListModal model =
+showModal : Model -> ( Model, Cmd Msg )
+showModal model =
     { model
         | showAddContactsToListsModal = True
         , selectedLists = []
@@ -15,8 +15,8 @@ showAddContactsToListModal model =
         ! []
 
 
-closeAddContactsToListsModal : Model -> ( Model, Cmd Msg )
-closeAddContactsToListsModal model =
+closeModal : Model -> ( Model, Cmd Msg )
+closeModal model =
     { model
         | showAddContactsToListsModal = False
         , httpError = Nothing
@@ -24,8 +24,8 @@ closeAddContactsToListsModal model =
         ! []
 
 
-processContactsCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
-processContactsCheckbox model id state =
+contactsCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
+contactsCheckbox model id state =
     if state == True then
         { model | selectedContacts = id :: model.selectedContacts } ! []
     else
@@ -36,8 +36,8 @@ processContactsCheckbox model id state =
             ! []
 
 
-processListCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
-processListCheckbox model id state =
+listCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
+listCheckbox model id state =
     if state == True then
         { model | selectedLists = id :: model.selectedLists } ! []
     else
@@ -48,13 +48,13 @@ processListCheckbox model id state =
             ! []
 
 
-completeAddContactsToList : Model -> ( Model, Cmd Msg )
-completeAddContactsToList model =
+complete : Model -> ( Model, Cmd Msg )
+complete model =
     model ! []
 
 
-submitAddContactsToList : Model -> ( Model, Cmd Msg )
-submitAddContactsToList model =
+submit : Model -> ( Model, Cmd Msg )
+submit model =
     { model
         | showAddContactsToListsModal = False
     }

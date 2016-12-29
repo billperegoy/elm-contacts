@@ -10,8 +10,8 @@ import ContactActions
 import Json.Encode
 
 
-processEmailLists : Model -> EmailListResponse -> ( Model, Cmd Msg )
-processEmailLists model response =
+receive : Model -> EmailListResponse -> ( Model, Cmd Msg )
+receive model response =
     { model
         | lists = response.lists
         , httpError = Nothing
@@ -19,8 +19,8 @@ processEmailLists model response =
         ! []
 
 
-showRenameListModal : Model -> EmailList -> ( Model, Cmd Msg )
-showRenameListModal model list =
+showRenameModal : Model -> EmailList -> ( Model, Cmd Msg )
+showRenameModal model list =
     { model
         | showListNameModal = True
         , activeList = Just list

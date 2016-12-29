@@ -4,8 +4,8 @@ import Model exposing (..)
 import HttpErrors
 import TagActions
 import ContactActions
-import ListActions exposing (..)
-import AddContactsToListsActions exposing (..)
+import ListActions
+import ContactListActions
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -36,64 +36,64 @@ update msg model =
         -- Lists
         --
         ProcessEmailLists (Ok response) ->
-            processEmailLists model response
+            ListActions.receive model response
 
         ProcessEmailLists (Err error) ->
             HttpErrors.setErrors model error
 
         ShowRenameListModal list ->
-            showRenameListModal model list
+            ListActions.showRenameModal model list
 
         ShowNewListModal ->
-            showNewListModal model
+            ListActions.showNewListModal model
 
         CompleteListRename (Ok _) ->
-            completeListRename model
+            ListActions.completeListRename model
 
         CompleteListRename (Err error) ->
-            listHttpError model error
+            ListActions.listHttpError model error
 
         CloseListRenameModal ->
-            closeListRenameModal model
+            ListActions.closeListRenameModal model
 
         UpdateNewListName name ->
-            updateNewListName model name
+            ListActions.updateNewListName model name
 
         DeleteList id ->
-            requestListDelete model id
+            ListActions.requestListDelete model id
 
         SubmitListAction ->
-            submitListAction model
+            ListActions.submitListAction model
 
         ProcessListDelete (Ok _) ->
-            processListDelete model
+            ListActions.processListDelete model
 
         ProcessListDelete (Err error) ->
-            listHttpError model error
+            ListActions.listHttpError model error
 
         SetActiveListMenu id ->
-            setActiveListMenu model id
+            ListActions.setActiveListMenu model id
 
         --
         -- Add Contacts To Lists
         --
         ShowAddContactsToListsModal ->
-            showAddContactsToListModal model
+            ContactListActions.showModal model
 
         ProcessContactsCheckbox id state ->
-            processContactsCheckbox model id state
+            ContactListActions.contactsCheckbox model id state
 
         ProcessListCheckbox id state ->
-            processListCheckbox model id state
+            ContactListActions.listCheckbox model id state
 
         CloseAddContactsToListsModal ->
-            closeAddContactsToListsModal model
+            ContactListActions.closeModal model
 
         SubmitAddContactsToList ->
-            submitAddContactsToList model
+            ContactListActions.submit model
 
         CompleteAddContactsToList (Ok _) ->
-            completeAddContactsToList model
+            ContactListActions.complete model
 
         CompleteAddContactsToList (Err error) ->
             HttpErrors.setErrors model error
