@@ -1,14 +1,6 @@
 module Update exposing (..)
 
 import Model exposing (..)
-import Http
-import Model exposing (..)
-import Contact exposing (..)
-import EmailList exposing (..)
-import Tag exposing (..)
-import HttpUtils exposing (..)
-import Json.Decode
-import Json.Encode
 import HttpErrors
 import TagActions exposing (..)
 import ContactActions exposing (..)
@@ -19,6 +11,9 @@ import AddContactsToListsActions exposing (..)
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        --
+        -- Contacts
+        --
         ProcessContacts (Ok response) ->
             processContacts model response
 
@@ -37,6 +32,8 @@ update msg model =
         SetContactsPerPage count ->
             setContactsPerPage model count
 
+        --
+        -- Lists
         --
         ProcessEmailLists (Ok response) ->
             processEmailLists model response
@@ -78,6 +75,8 @@ update msg model =
             setActiveListMenu model id
 
         --
+        -- Add Contacts To Lists
+        --
         ShowAddContactsToListsModal ->
             showAddContactsToListModal model
 
@@ -99,6 +98,8 @@ update msg model =
         CompleteAddContactsToList (Err error) ->
             HttpErrors.setErrors model error
 
+        --
+        -- Tags
         --
         ProcessTags (Ok response) ->
             processTags model response
