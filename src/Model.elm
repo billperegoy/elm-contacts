@@ -69,11 +69,11 @@ type Msg
     | SubmitListAction
     | CloseRenameModal
     | CompleteListRename (Result Http.Error EmailList)
-    | ProcessListDelete (Result Http.Error DeleteResponse)
+    | ProcessListDelete (Result Http.Error MassActionResponse)
     | SetActiveListMenu String
     | SetCheckbox String Bool
     | SetListCheckbox String Bool
     | ShowAddToListsModal
     | CloseAddToListsModal
     | SubmitAddContactsToList
-    | CompleteAddContactsToList (Result Http.Error DeleteResponse)
+    | CompleteAddContactsToList (Result Http.Error MassActionResponse)

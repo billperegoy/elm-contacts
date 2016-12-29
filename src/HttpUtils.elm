@@ -14,13 +14,13 @@ type HttpAction
     | Delete
 
 
-deleteResponseDecoder : Json.Decode.Decoder DeleteResponse
+deleteResponseDecoder : Json.Decode.Decoder MassActionResponse
 deleteResponseDecoder =
-    Json.Decode.Pipeline.decode DeleteResponse
+    Json.Decode.Pipeline.decode MassActionResponse
         |> Json.Decode.Pipeline.required "activity_id" Json.Decode.string
 
 
-type alias DeleteResponse =
+type alias MassActionResponse =
     { activityId : String
     }
 
