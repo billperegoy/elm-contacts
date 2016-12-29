@@ -6,8 +6,8 @@ import Tag exposing (..)
 import HttpErrors
 
 
-processTags : Model -> TagsResponse -> ( Model, Cmd Msg )
-processTags model response =
+receive : Model -> TagsResponse -> ( Model, Cmd Msg )
+receive model response =
     { model
         | tags = response.tags
         , httpError = Nothing
@@ -15,8 +15,8 @@ processTags model response =
         ! []
 
 
-getTags : Cmd Msg
-getTags =
+request : Cmd Msg
+request =
     let
         url =
             "http://0.0.0.0:3000/contacts-service/v3/accounts/1/tags"

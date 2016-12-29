@@ -6,8 +6,8 @@ import Contact exposing (..)
 import HttpErrors
 
 
-processContacts : Model -> ContactsResponse -> ( Model, Cmd Msg )
-processContacts model response =
+receive : Model -> ContactsResponse -> ( Model, Cmd Msg )
+receive model response =
     let
         previous =
             if response.links.previous.url == "" then
@@ -32,8 +32,8 @@ processContacts model response =
             ! []
 
 
-requestContacts : Model -> ContactsFilterState -> ( Model, Cmd Msg )
-requestContacts model contactsFilterState =
+request : Model -> ContactsFilterState -> ( Model, Cmd Msg )
+request model contactsFilterState =
     { model
         | contacts = []
         , contactsCount = 0
@@ -43,8 +43,8 @@ requestContacts model contactsFilterState =
         ! [ getContacts contactsFilterState model.contactsPerPage ]
 
 
-requestPaginatedContacts : Model -> PaginationDirection -> String -> ( Model, Cmd Msg )
-requestPaginatedContacts model direction url =
+requestPaginated : Model -> PaginationDirection -> String -> ( Model, Cmd Msg )
+requestPaginated model direction url =
     let
         increment =
             case direction of
@@ -120,13 +120,13 @@ urlString baseUrl params =
         ++ httpParams params
 
 
-displayContactsPerPageDropdown : Model -> ( Model, Cmd Msg )
-displayContactsPerPageDropdown model =
+displayPerPageDropdown : Model -> ( Model, Cmd Msg )
+displayPerPageDropdown model =
     { model | showContactsPerPageDropdown = True } ! []
 
 
-setContactsPerPage : Model -> Int -> ( Model, Cmd Msg )
-setContactsPerPage model count =
+setPerPageCount : Model -> Int -> ( Model, Cmd Msg )
+setPerPageCount model count =
     { model
         | contactsPerPage = count
         , startContactIndex = 1

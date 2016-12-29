@@ -25,5 +25,5 @@ initialActions : List (Cmd Model.Msg)
 initialActions =
     [ ContactActions.getContacts Contact.All 50
     , ListActions.getEmailLists
-    , TagActions.getTags
+    , TagActions.request
     ]

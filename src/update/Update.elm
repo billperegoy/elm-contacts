@@ -2,8 +2,8 @@ module Update exposing (..)
 
 import Model exposing (..)
 import HttpErrors
-import TagActions exposing (..)
-import ContactActions exposing (..)
+import TagActions
+import ContactActions
 import ListActions exposing (..)
 import AddContactsToListsActions exposing (..)
 
@@ -15,22 +15,22 @@ update msg model =
         -- Contacts
         --
         ProcessContacts (Ok response) ->
-            processContacts model response
+            ContactActions.receive model response
 
         ProcessContacts (Err error) ->
             HttpErrors.setErrors model error
 
         GetContacts contactsFilterState ->
-            requestContacts model contactsFilterState
+            ContactActions.request model contactsFilterState
 
         GetPaginatedContacts direction url ->
-            requestPaginatedContacts model direction url
+            ContactActions.requestPaginated model direction url
 
         DisplayContactsPerPageDropdown ->
-            displayContactsPerPageDropdown model
+            ContactActions.displayPerPageDropdown model
 
         SetContactsPerPage count ->
-            setContactsPerPage model count
+            ContactActions.setPerPageCount model count
 
         --
         -- Lists
@@ -102,7 +102,7 @@ update msg model =
         -- Tags
         --
         ProcessTags (Ok response) ->
-            processTags model response
+            TagActions.receive model response
 
         ProcessTags (Err error) ->
             HttpErrors.setErrors model error
