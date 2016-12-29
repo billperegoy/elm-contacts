@@ -8,6 +8,14 @@ import Contact exposing (..)
 import HttpUtils exposing (..)
 
 
+view : Model -> Html Msg
+view model =
+    table [ class "table table-striped" ]
+        [ (tableHeader model)
+        , tableBody model.contacts
+        ]
+
+
 headerInfoRow : Model -> Html Msg
 headerInfoRow model =
     let
@@ -71,14 +79,6 @@ tableBody : List Contact -> Html Msg
 tableBody contacts =
     tbody []
         (contactRows contacts)
-
-
-view : Model -> Html Msg
-view model =
-    table [ class "table table-striped" ]
-        [ (tableHeader model)
-        , tableBody model.contacts
-        ]
 
 
 contactRows : List Contact -> List (Html Msg)
