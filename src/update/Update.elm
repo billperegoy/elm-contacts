@@ -47,8 +47,8 @@ update msg model =
         ShowRenameListModal list ->
             showRenameListModal model list
 
-        CloseRenameModal ->
-            closeRenameModal model
+        CloseListRenameModal ->
+            closeListRenameModal model
 
         DeleteList id ->
             requestListDelete model id
@@ -83,20 +83,20 @@ update msg model =
         ShowNewListModal ->
             showNewListModal model
 
-        SetCheckbox id state ->
-            setCheckbox model id state
+        ProcessContactsCheckbox id state ->
+            processContactsCheckbox model id state
 
-        SetListCheckbox id state ->
-            setListCheckbox model id state
+        ProcessListCheckbox id state ->
+            processListCheckbox model id state
 
-        ShowAddToListsModal ->
-            showAddToListModal model
+        ShowAddContactsToListsModal ->
+            showAddContactsToListModal model
 
-        CloseAddToListsModal ->
-            closeAddToListsModal model
+        CloseAddContactsToListsModal ->
+            closeAddContactsToListsModal model
 
         SubmitAddContactsToList ->
-            { model | showAddToListsModal = False } ! [ postAddContactsToLists model ]
+            { model | showAddContactsToListsModal = False } ! [ postAddContactsToLists model ]
 
 
 processContacts : Model -> ContactsResponse -> ( Model, Cmd Msg )
@@ -202,10 +202,10 @@ showRenameListModal model list =
         ! []
 
 
-showAddToListModal : Model -> ( Model, Cmd Msg )
-showAddToListModal model =
+showAddContactsToListModal : Model -> ( Model, Cmd Msg )
+showAddContactsToListModal model =
     { model
-        | showAddToListsModal = True
+        | showAddContactsToListsModal = True
         , selectedLists = []
     }
         ! []
@@ -221,8 +221,8 @@ showNewListModal model =
         ! []
 
 
-closeRenameModal : Model -> ( Model, Cmd Msg )
-closeRenameModal model =
+closeListRenameModal : Model -> ( Model, Cmd Msg )
+closeListRenameModal model =
     { model
         | showListNameModal = False
         , httpError = Nothing
@@ -230,10 +230,10 @@ closeRenameModal model =
         ! []
 
 
-closeAddToListsModal : Model -> ( Model, Cmd Msg )
-closeAddToListsModal model =
+closeAddContactsToListsModal : Model -> ( Model, Cmd Msg )
+closeAddContactsToListsModal model =
     { model
-        | showAddToListsModal = False
+        | showAddContactsToListsModal = False
         , httpError = Nothing
     }
         ! []
@@ -298,8 +298,8 @@ setActiveListMenu model id =
     { model | listMenuToShow = Just id } ! []
 
 
-setCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
-setCheckbox model id state =
+processContactsCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
+processContactsCheckbox model id state =
     if state == True then
         { model | selectedContacts = id :: model.selectedContacts } ! []
     else
@@ -310,8 +310,8 @@ setCheckbox model id state =
             ! []
 
 
-setListCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
-setListCheckbox model id state =
+processListCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
+processListCheckbox model id state =
     if state == True then
         { model | selectedLists = id :: model.selectedLists } ! []
     else

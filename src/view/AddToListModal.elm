@@ -38,7 +38,7 @@ view model =
                             [ input
                                 [ type_ "checkbox"
                                 , onCheck
-                                    (SetListCheckbox list.id)
+                                    (ProcessListCheckbox list.id)
                                 ]
                                 []
                             , span [ style [ ( "margin-left", "4px" ) ] ]
@@ -77,9 +77,9 @@ view model =
             "Add " ++ (toString (model.selectedContacts |> List.length)) ++ " contacts to lists"
     in
         Dialog.view
-            (if model.showAddToListsModal then
+            (if model.showAddContactsToListsModal then
                 Just
-                    { closeMessage = Just CloseAddToListsModal
+                    { closeMessage = Just CloseAddContactsToListsModal
                     , containerClass = Just "your-container-class"
                     , header = Just (h4 [] [ text headerText ])
                     , body = Just body

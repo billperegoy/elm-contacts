@@ -40,7 +40,7 @@ headerInfoRow model =
                           )
                         ]
                     ]
-                    [ a [ href "#", onClickNoDefault ShowAddToListsModal ] [ text "Add to Lists" ] ]
+                    [ a [ href "#", onClickNoDefault ShowAddContactsToListsModal ] [ text "Add to Lists" ] ]
     in
         tr []
             [ th [ colspan 4 ]
@@ -64,7 +64,7 @@ tableHeader model =
                 [ th []
                     [ input
                         [ type_ "checkbox"
-                          --, onCheck (SetCheckbox ids)
+                          --, onCheck (SetContactsCheckbox ids)
                         ]
                         []
                     ]
@@ -89,7 +89,7 @@ contactRows contacts =
                 [ td []
                     [ input
                         [ type_ "checkbox"
-                        , onCheck (SetCheckbox contact.id)
+                        , onCheck (ProcessContactsCheckbox contact.id)
                         ]
                         []
                     ]

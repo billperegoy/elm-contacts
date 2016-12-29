@@ -8,9 +8,9 @@ import HttpUtils exposing (..)
 
 
 type alias Model =
-    { contacts : List Contact
+    { httpError : Maybe Http.Error
+    , contacts : List Contact
     , selectedContacts : List String
-    , selectedLists : List String
     , contactsCount : Int
     , showContactsPerPageDropdown : Bool
     , contactsPerPage : Int
@@ -18,15 +18,15 @@ type alias Model =
     , nextContactsUrl : Maybe String
     , previousContactsUrl : Maybe String
     , contactsFilterState : ContactsFilterState
-    , tags : List Tag
-    , httpError : Maybe Http.Error
     , lists : List EmailList
+    , selectedLists : List String
     , showListNameModal : Bool
     , activeList : Maybe EmailList
     , newListName : String
     , listMenuToShow : Maybe String
     , listHttpAction : HttpAction
-    , showAddToListsModal : Bool
+    , tags : List Tag
+    , showAddContactsToListsModal : Bool
     }
 
 
@@ -50,30 +50,33 @@ init =
     , activeList = Nothing
     , newListName = ""
     , listMenuToShow = Nothing
-    , showAddToListsModal = False
+    , showAddContactsToListsModal = False
     }
 
 
 type Msg
     = ProcessContacts (Result Http.Error ContactsResponse)
-    | ProcessEmailLists (Result Http.Error EmailListResponse)
-    | ProcessTags (Result Http.Error TagsResponse)
     | GetContacts ContactsFilterState
     | GetPaginatedContacts PaginationDirection String
     | DisplayContactsPerPageDropdown
     | SetContactsPerPage Int
+      --
+    | ProcessEmailLists (Result Http.Error EmailListResponse)
     | ShowRenameListModal EmailList
     | ShowNewListModal
+    | CompleteListRename (Result Http.Error EmailList)
+    | CloseListRenameModal
     | UpdateNewListName String
     | DeleteList String
     | SubmitListAction
-    | CloseRenameModal
-    | CompleteListRename (Result Http.Error EmailList)
     | ProcessListDelete (Result Http.Error MassActionResponse)
     | SetActiveListMenu String
-    | SetCheckbox String Bool
-    | SetListCheckbox String Bool
-    | ShowAddToListsModal
-    | CloseAddToListsModal
+      --
+    | ShowAddContactsToListsModal
+    | ProcessContactsCheckbox String Bool
+    | ProcessListCheckbox String Bool
+    | CloseAddContactsToListsModal
     | SubmitAddContactsToList
     | CompleteAddContactsToList (Result Http.Error MassActionResponse)
+      --
+    | ProcessTags (Result Http.Error TagsResponse)

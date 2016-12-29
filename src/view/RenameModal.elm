@@ -49,7 +49,7 @@ view model =
         Dialog.view
             (if model.showListNameModal then
                 Just
-                    { closeMessage = Just CloseRenameModal
+                    { closeMessage = Just CloseListRenameModal
                     , containerClass = Just "your-container-class"
                     , header = Just (h4 [] [ text (buttonText ++ " List") ])
                     , body = Just body
