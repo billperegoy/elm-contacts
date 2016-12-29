@@ -10,6 +10,7 @@ import HttpUtils exposing (..)
 import Json.Decode
 import Json.Encode
 import HttpErrors
+import TagActions exposing (..)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -133,15 +134,6 @@ processEmailLists : Model -> EmailListResponse -> ( Model, Cmd Msg )
 processEmailLists model response =
     { model
         | lists = response.lists
-        , httpError = Nothing
-    }
-        ! []
-
-
-processTags : Model -> TagsResponse -> ( Model, Cmd Msg )
-processTags model response =
-    { model
-        | tags = response.tags
         , httpError = Nothing
     }
         ! []
@@ -450,21 +442,6 @@ getEmailLists =
             "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
     in
         Http.send ProcessEmailLists (Http.get url emailListResponseDecoder)
-
-
-
---
--- Tags
---
-
-
-getTags : Cmd Msg
-getTags =
-    let
-        url =
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/tags"
-    in
-        Http.send ProcessTags (Http.get url tagsResponseDecoder)
 
 
 

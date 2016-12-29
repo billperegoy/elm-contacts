@@ -6,6 +6,7 @@ import Update
 import View
 import Subscriptions
 import Contact
+import TagActions
 
 
 main : Program Never Model.Model Model.Msg
@@ -22,5 +23,5 @@ initialActions : List (Cmd Model.Msg)
 initialActions =
     [ Update.getContacts Contact.All 50
     , Update.getEmailLists
-    , Update.getTags
+    , TagActions.getTags
     ]
