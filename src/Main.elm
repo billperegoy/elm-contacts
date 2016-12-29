@@ -5,13 +5,22 @@ import Model
 import Update
 import View
 import Subscriptions
+import Contact
 
 
 main : Program Never Model.Model Model.Msg
 main =
     Html.program
-        { init = Update.init
+        { init = Model.init ! initialActions
         , view = View.view
         , update = Update.update
         , subscriptions = Subscriptions.subscriptions
         }
+
+
+initialActions : List (Cmd Model.Msg)
+initialActions =
+    [ Update.getContacts Contact.All 50
+    , Update.getEmailLists
+    , Update.getTags
+    ]

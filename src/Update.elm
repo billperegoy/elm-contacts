@@ -315,35 +315,6 @@ setListCheckbox model id state =
             ! []
 
 
-init : ( Model, Cmd Msg )
-init =
-    let
-        contactsPerPage =
-            50
-    in
-        { contactsCount = 0
-        , contactsPerPage = contactsPerPage
-        , showContactsPerPageDropdown = False
-        , contacts = []
-        , selectedContacts = []
-        , selectedLists = []
-        , startContactIndex = 1
-        , nextContactsUrl = Nothing
-        , previousContactsUrl = Nothing
-        , contactsFilterState = All
-        , httpError = Nothing
-        , tags = []
-        , lists = []
-        , listHttpAction = Get
-        , showListNameModal = False
-        , activeList = Nothing
-        , newListName = ""
-        , listMenuToShow = Nothing
-        , showAddToListsModal = False
-        }
-            ! [ getContacts All contactsPerPage, getEmailLists, getTags ]
-
-
 
 --
 -- Contacts

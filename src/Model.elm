@@ -30,6 +30,30 @@ type alias Model =
     }
 
 
+init : Model
+init =
+    { contactsCount = 0
+    , contactsPerPage = 50
+    , showContactsPerPageDropdown = False
+    , contacts = []
+    , selectedContacts = []
+    , selectedLists = []
+    , startContactIndex = 1
+    , nextContactsUrl = Nothing
+    , previousContactsUrl = Nothing
+    , contactsFilterState = All
+    , httpError = Nothing
+    , tags = []
+    , lists = []
+    , listHttpAction = Get
+    , showListNameModal = False
+    , activeList = Nothing
+    , newListName = ""
+    , listMenuToShow = Nothing
+    , showAddToListsModal = False
+    }
+
+
 type Msg
     = ProcessContacts (Result Http.Error ContactsResponse)
     | ProcessEmailLists (Result Http.Error EmailListResponse)
