@@ -12,6 +12,7 @@ import Json.Encode
 import HttpErrors
 import TagActions exposing (..)
 import ContactActions exposing (..)
+import ListActions exposing (..)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -105,50 +106,11 @@ update msg model =
             HttpErrors.setErrors model error
 
 
-processEmailLists : Model -> EmailListResponse -> ( Model, Cmd Msg )
-processEmailLists model response =
-    { model
-        | lists = response.lists
-        , httpError = Nothing
-    }
-        ! []
-
-
-showRenameListModal : Model -> EmailList -> ( Model, Cmd Msg )
-showRenameListModal model list =
-    { model
-        | showListNameModal = True
-        , activeList = Just list
-        , listMenuToShow = Nothing
-        , listHttpAction = Put
-    }
-        ! []
-
-
 showAddContactsToListModal : Model -> ( Model, Cmd Msg )
 showAddContactsToListModal model =
     { model
         | showAddContactsToListsModal = True
         , selectedLists = []
-    }
-        ! []
-
-
-showNewListModal : Model -> ( Model, Cmd Msg )
-showNewListModal model =
-    { model
-        | showListNameModal = True
-        , listMenuToShow = Nothing
-        , listHttpAction = Post
-    }
-        ! []
-
-
-closeListRenameModal : Model -> ( Model, Cmd Msg )
-closeListRenameModal model =
-    { model
-        | showListNameModal = False
-        , httpError = Nothing
     }
         ! []
 
@@ -168,52 +130,6 @@ requestListDelete model id =
         | listMenuToShow = Nothing
     }
         ! [ deleteList id ]
-
-
-submitListAction : Model -> ( Model, Cmd Msg )
-submitListAction model =
-    let
-        id =
-            case model.activeList of
-                Nothing ->
-                    "bad"
-
-                Just list ->
-                    list.id
-    in
-        model
-            ! [ listAction id model.newListName model.listHttpAction ]
-
-
-updateNewListName : Model -> String -> ( Model, Cmd Msg )
-updateNewListName model name =
-    { model
-        | newListName = name
-    }
-        ! []
-
-
-completeListRename : Model -> ( Model, Cmd Msg )
-completeListRename model =
-    { model
-        | httpError = Nothing
-        , showListNameModal = False
-    }
-        ! [ getEmailLists ]
-
-
-listHttpError : Model -> Http.Error -> ( Model, Cmd Msg )
-listHttpError model error =
-    { model | httpError = Just error } ! []
-
-
-processListDelete : Model -> ( Model, Cmd Msg )
-processListDelete model =
-    { model
-        | httpError = Nothing
-        , activeList = Nothing
-    }
-        ! [ getEmailLists, getContacts All model.contactsPerPage ]
 
 
 setActiveListMenu : Model -> String -> ( Model, Cmd Msg )
@@ -262,74 +178,6 @@ submitAddContactsToList model =
         | showAddContactsToListsModal = False
     }
         ! [ postAddContactsToLists model ]
-
-
-
---
--- Lists
---
--- FIXME - want to pass in the favorite value. We now force false.
-
-
-listAction : String -> String -> HttpAction -> Cmd Msg
-listAction id newName action =
-    let
-        url =
-            if action == Post then
-                "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
-            else
-                "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists/" ++ id
-
-        payload =
-            Json.Encode.object
-                [ ( "name", Json.Encode.string newName )
-                , ( "favorite", Json.Encode.bool False )
-                ]
-
-        body =
-            Http.stringBody "application/json" (Json.Encode.encode 0 payload)
-
-        request =
-            Http.request
-                { method = httpActionToString action
-                , headers = []
-                , url = url
-                , body = body
-                , expect = Http.expectJson emailListDecoder
-                , timeout = Nothing
-                , withCredentials = False
-                }
-    in
-        Http.send CompleteListRename request
-
-
-deleteList : String -> Cmd Msg
-deleteList id =
-    let
-        url =
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists/" ++ id
-
-        request =
-            Http.request
-                { method = "DELETE"
-                , headers = []
-                , url = url
-                , body = Http.emptyBody
-                , expect = Http.expectJson deleteResponseDecoder
-                , timeout = Nothing
-                , withCredentials = False
-                }
-    in
-        Http.send ProcessListDelete request
-
-
-getEmailLists : Cmd Msg
-getEmailLists =
-    let
-        url =
-            "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
-    in
-        Http.send ProcessEmailLists (Http.get url emailListResponseDecoder)
 
 
 postAddContactsToLists : Model -> Cmd Msg
