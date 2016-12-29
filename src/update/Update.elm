@@ -17,59 +17,51 @@ update msg model =
         ProcessContacts (Ok response) ->
             processContacts model response
 
-        ProcessEmailLists (Ok response) ->
-            processEmailLists model response
-
-        ProcessTags (Ok response) ->
-            processTags model response
+        ProcessContacts (Err error) ->
+            setErrors model error
 
         GetContacts contactsFilterState ->
             requestContacts model contactsFilterState
 
-        ProcessContacts (Err error) ->
-            setErrors model error
-
-        ProcessEmailLists (Err error) ->
-            setErrors model error
-
-        ProcessTags (Err error) ->
-            setErrors model error
-
         GetPaginatedContacts direction url ->
             requestPaginatedContacts model direction url
-
-        SetContactsPerPage count ->
-            setContactsPerPage model count
 
         DisplayContactsPerPageDropdown ->
             displayContactsPerPageDropdown model
 
+        SetContactsPerPage count ->
+            setContactsPerPage model count
+
+        --
+        ProcessEmailLists (Ok response) ->
+            processEmailLists model response
+
+        ProcessEmailLists (Err error) ->
+            setErrors model error
+
         ShowRenameListModal list ->
             showRenameListModal model list
 
+        ShowNewListModal ->
+            showNewListModal model
+
+        CompleteListRename (Ok _) ->
+            completeListRename model
+
+        CompleteListRename (Err error) ->
+            listHttpError model error
+
         CloseListRenameModal ->
             closeListRenameModal model
+
+        UpdateNewListName name ->
+            updateNewListName model name
 
         DeleteList id ->
             requestListDelete model id
 
         SubmitListAction ->
             submitListAction model
-
-        UpdateNewListName name ->
-            updateNewListName model name
-
-        CompleteListRename (Ok _) ->
-            completeListRename model
-
-        CompleteAddContactsToList (Ok _) ->
-            model ! []
-
-        CompleteAddContactsToList (Err error) ->
-            setErrors model error
-
-        CompleteListRename (Err error) ->
-            listHttpError model error
 
         ProcessListDelete (Ok _) ->
             processListDelete model
@@ -80,8 +72,9 @@ update msg model =
         SetActiveListMenu id ->
             setActiveListMenu model id
 
-        ShowNewListModal ->
-            showNewListModal model
+        --
+        ShowAddContactsToListsModal ->
+            showAddContactsToListModal model
 
         ProcessContactsCheckbox id state ->
             processContactsCheckbox model id state
@@ -89,14 +82,24 @@ update msg model =
         ProcessListCheckbox id state ->
             processListCheckbox model id state
 
-        ShowAddContactsToListsModal ->
-            showAddContactsToListModal model
-
         CloseAddContactsToListsModal ->
             closeAddContactsToListsModal model
 
         SubmitAddContactsToList ->
-            { model | showAddContactsToListsModal = False } ! [ postAddContactsToLists model ]
+            submitAddContactsToList model
+
+        CompleteAddContactsToList (Ok _) ->
+            completeAddContactsToList model
+
+        CompleteAddContactsToList (Err error) ->
+            setErrors model error
+
+        --
+        ProcessTags (Ok response) ->
+            processTags model response
+
+        ProcessTags (Err error) ->
+            setErrors model error
 
 
 processContacts : Model -> ContactsResponse -> ( Model, Cmd Msg )
@@ -370,6 +373,19 @@ getPaginatedContacts path =
             "http://0.0.0.0:3000/" ++ path
     in
         Http.send ProcessContacts (Http.get url contactResponseDecoder)
+
+
+completeAddContactsToList : Model -> ( Model, Cmd Msg )
+completeAddContactsToList model =
+    model ! []
+
+
+submitAddContactsToList : Model -> ( Model, Cmd Msg )
+submitAddContactsToList model =
+    { model
+        | showAddContactsToListsModal = False
+    }
+        ! [ postAddContactsToLists model ]
 
 
 
