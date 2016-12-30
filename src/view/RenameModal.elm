@@ -45,23 +45,25 @@ view model =
                     ]
                     []
                 ]
+
+        modalConfig =
+            { closeMessage = Just CloseListRenameModal
+            , containerClass = Just "your-container-class"
+            , header = Just (h4 [] [ text (buttonText ++ " List") ])
+            , body = Just body
+            , footer =
+                Just
+                    (button
+                        [ class "button button-primary"
+                        , onClickNoDefault SubmitListAction
+                        ]
+                        [ text buttonText ]
+                    )
+            }
     in
         Dialog.view
             (if model.showListNameModal then
-                Just
-                    { closeMessage = Just CloseListRenameModal
-                    , containerClass = Just "your-container-class"
-                    , header = Just (h4 [] [ text (buttonText ++ " List") ])
-                    , body = Just body
-                    , footer =
-                        Just
-                            (button
-                                [ class "button button-primary"
-                                , onClickNoDefault SubmitListAction
-                                ]
-                                [ text buttonText ]
-                            )
-                    }
+                Just modalConfig
              else
                 Nothing
             )

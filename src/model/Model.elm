@@ -10,7 +10,6 @@ import HttpUtils exposing (..)
 type alias Model =
     { httpError : Maybe Http.Error
     , contacts : List Contact
-    , selectedContacts : List String
     , contactsCount : Int
     , showContactsPerPageDropdown : Bool
     , contactsPerPage : Int
@@ -19,7 +18,6 @@ type alias Model =
     , previousContactsUrl : Maybe String
     , contactsFilterState : ContactsFilterState
     , lists : List EmailList
-    , selectedLists : List String
     , showListNameModal : Bool
     , activeList : Maybe EmailList
     , newListName : String
@@ -27,6 +25,8 @@ type alias Model =
     , listHttpAction : HttpAction
     , tags : List Tag
     , showAddContactsToListsModal : Bool
+    , selectedLists : List String
+    , selectedContacts : List String
     }
 
 

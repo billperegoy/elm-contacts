@@ -75,23 +75,25 @@ view model =
 
         headerText =
             "Add " ++ (toString (model.selectedContacts |> List.length)) ++ " contacts to lists"
+
+        modalConfig =
+            { closeMessage = Just CloseAddContactsToListsModal
+            , containerClass = Just "your-container-class"
+            , header = Just (h4 [] [ text headerText ])
+            , body = Just body
+            , footer =
+                Just
+                    (button
+                        [ class "button button-primary"
+                        , onClickNoDefault SubmitAddContactsToList
+                        ]
+                        [ text buttonText ]
+                    )
+            }
     in
         Dialog.view
             (if model.showAddContactsToListsModal then
-                Just
-                    { closeMessage = Just CloseAddContactsToListsModal
-                    , containerClass = Just "your-container-class"
-                    , header = Just (h4 [] [ text headerText ])
-                    , body = Just body
-                    , footer =
-                        Just
-                            (button
-                                [ class "button button-primary"
-                                , onClickNoDefault SubmitAddContactsToList
-                                ]
-                                [ text buttonText ]
-                            )
-                    }
+                Just modalConfig
              else
                 Nothing
             )
