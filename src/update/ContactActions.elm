@@ -20,13 +20,21 @@ receive model response =
                 Nothing
             else
                 Just response.links.next.url
+
+        contacts =
+            model.contacts
+
+        updatedContacts =
+            { contacts
+                | elements = response.contacts
+                , count = response.count
+                , previousUrl = previous
+                , nextUrl = next
+                , selected = []
+            }
     in
         { model
-            | contacts = response.contacts
-            , selectedContacts = []
-            , contactsCount = response.count
-            , previousContactsUrl = previous
-            , nextContactsUrl = next
+            | contacts = updatedContacts
             , httpError = Nothing
         }
             ! []
@@ -34,13 +42,22 @@ receive model response =
 
 request : Model -> ContactsFilterState -> ( Model, Cmd Msg )
 request model contactsFilterState =
-    { model
-        | contacts = []
-        , contactsCount = 0
-        , startContactIndex = 1
-        , contactsFilterState = contactsFilterState
-    }
-        ! [ getContacts contactsFilterState model.contactsPerPage ]
+    let
+        contacts =
+            model.contacts
+
+        updatedContacts =
+            { contacts
+                | elements = []
+                , count = 0
+                , startIndex = 1
+                , filterState = contactsFilterState
+            }
+    in
+        { model
+            | contacts = updatedContacts
+        }
+            ! [ getContacts contactsFilterState model.contacts.perPage ]
 
 
 requestPaginated : Model -> PaginationDirection -> String -> ( Model, Cmd Msg )
@@ -49,13 +66,21 @@ requestPaginated model direction url =
         increment =
             case direction of
                 Forward ->
-                    model.contactsPerPage
+                    model.contacts.perPage
 
                 Backward ->
-                    0 - model.contactsPerPage
+                    0 - model.contacts.perPage
+
+        contacts =
+            model.contacts
+
+        updatedContacts =
+            { contacts
+                | startIndex = contacts.startIndex + increment
+            }
     in
         { model
-            | startContactIndex = model.startContactIndex + increment
+            | contacts = updatedContacts
         }
             ! [ getPaginatedContacts url ]
 
@@ -122,14 +147,30 @@ urlString baseUrl params =
 
 displayPerPageDropdown : Model -> ( Model, Cmd Msg )
 displayPerPageDropdown model =
-    { model | showContactsPerPageDropdown = True } ! []
+    let
+        contacts =
+            model.contacts
+
+        updatedContacts =
+            { contacts | perPageDropdown = True }
+    in
+        { model | contacts = updatedContacts } ! []
 
 
 setPerPageCount : Model -> Int -> ( Model, Cmd Msg )
 setPerPageCount model count =
-    { model
-        | contactsPerPage = count
-        , startContactIndex = 1
-        , showContactsPerPageDropdown = False
-    }
-        ! [ getContacts model.contactsFilterState count ]
+    let
+        contacts =
+            model.contacts
+
+        updatedContacts =
+            { contacts
+                | startIndex = 1
+                , perPage = count
+                , perPageDropdown = False
+            }
+    in
+        { model
+            | contacts = updatedContacts
+        }
+            ! [ getContacts model.contacts.filterState count ]

@@ -9,48 +9,70 @@ import HttpUtils exposing (..)
 
 type alias Model =
     { httpError : Maybe Http.Error
-    , contacts : List Contact
-    , contactsCount : Int
-    , showContactsPerPageDropdown : Bool
-    , contactsPerPage : Int
-    , startContactIndex : Int
-    , nextContactsUrl : Maybe String
-    , previousContactsUrl : Maybe String
-    , contactsFilterState : ContactsFilterState
-    , lists : List EmailList
-    , showListNameModal : Bool
-    , activeList : Maybe EmailList
-    , newListName : String
-    , listMenuToShow : Maybe String
-    , listHttpAction : HttpAction
+    , contacts : ContactsModel
+    , lists : ListModel
     , tags : List Tag
+    }
+
+
+type alias ContactsModel =
+    { elements : List Contact
+    , count : Int
+    , startIndex : Int
+    , nextUrl : Maybe String
+    , previousUrl : Maybe String
+    , filterState : ContactsFilterState
+    , perPage : Int
+    , perPageDropdown : Bool
+    , selected : List String
+    }
+
+
+type alias ListModel =
+    { elements : List EmailList
+    , showNameModal : Bool
+    , active : Maybe EmailList
+    , newName : String
+    , httpAction : HttpAction
+    , displayedMenu : Maybe String
     , showAddContactsToListsModal : Bool
-    , selectedLists : List String
-    , selectedContacts : List String
+    , selected : List String
+    }
+
+
+initContacts : ContactsModel
+initContacts =
+    { elements = []
+    , count = 0
+    , startIndex = 1
+    , nextUrl = Nothing
+    , previousUrl = Nothing
+    , filterState = All
+    , perPage = 50
+    , perPageDropdown = False
+    , selected = []
+    }
+
+
+initLists : ListModel
+initLists =
+    { elements = []
+    , showNameModal = False
+    , active = Nothing
+    , newName = ""
+    , httpAction = Get
+    , displayedMenu = Nothing
+    , showAddContactsToListsModal = False
+    , selected = []
     }
 
 
 init : Model
 init =
-    { contactsCount = 0
-    , contactsPerPage = 50
-    , showContactsPerPageDropdown = False
-    , contacts = []
-    , selectedContacts = []
-    , selectedLists = []
-    , startContactIndex = 1
-    , nextContactsUrl = Nothing
-    , previousContactsUrl = Nothing
-    , contactsFilterState = All
+    { contacts = initContacts
     , httpError = Nothing
     , tags = []
-    , lists = []
-    , listHttpAction = Get
-    , showListNameModal = False
-    , activeList = Nothing
-    , newListName = ""
-    , listMenuToShow = Nothing
-    , showAddContactsToListsModal = False
+    , lists = initLists
     }
 
 

@@ -12,7 +12,7 @@ view : Model -> Html Msg
 view model =
     let
         currentName =
-            case model.activeList of
+            case model.lists.active of
                 Nothing ->
                     ""
 
@@ -20,7 +20,7 @@ view model =
                     list.name
 
         buttonText =
-            if model.listHttpAction == HttpUtils.Put then
+            if model.lists.httpAction == HttpUtils.Put then
                 "Rename"
             else
                 "Create"
@@ -62,7 +62,7 @@ view model =
             }
     in
         Dialog.view
-            (if model.showListNameModal then
+            (if model.lists.showNameModal then
                 Just modalConfig
              else
                 Nothing

@@ -45,18 +45,18 @@ contactsCount : Model -> Html Msg
 contactsCount model =
     let
         displayText =
-            case model.contactsFilterState of
+            case model.contacts.filterState of
                 All ->
-                    "All Contacts (" ++ toString model.contactsCount ++ ")"
+                    "All Contacts (" ++ toString model.contacts.count ++ ")"
 
                 Unsubscribed ->
-                    "Unsubscribed (" ++ toString model.contactsCount ++ ")"
+                    "Unsubscribed (" ++ toString model.contacts.count ++ ")"
 
                 ByTag id ->
-                    tagName id model.tags ++ " (" ++ toString model.contactsCount ++ ")"
+                    tagName id model.tags ++ " (" ++ toString model.contacts.count ++ ")"
 
                 ByList id ->
-                    listName id model.lists ++ " (" ++ toString model.contactsCount ++ ")"
+                    listName id model.lists.elements ++ " (" ++ toString model.contacts.count ++ ")"
     in
         h2 []
             [ span [ class "label label-primary" ]
@@ -88,10 +88,10 @@ setContactsPerPage model =
 
         menuHeader =
             a [ href "#", onClickNoDefault DisplayContactsPerPageDropdown ]
-                [ text (displayString model.contactsPerPage) ]
+                [ text (displayString model.contacts.perPage) ]
 
         menu =
-            if model.showContactsPerPageDropdown then
+            if model.contacts.perPageDropdown then
                 ul [ style [ ( "list-style-type", "none" ) ] ]
                     (List.map (\value -> contactListElement value) legalValues)
             else
@@ -107,19 +107,19 @@ pagination : Model -> Html Msg
 pagination model =
     let
         startIndex =
-            toString model.startContactIndex
+            toString model.contacts.startIndex
 
         endIndex =
-            if (model.startContactIndex + model.contactsPerPage - 1) > model.contactsCount then
-                toString model.contactsCount
+            if (model.contacts.startIndex + model.contacts.perPage - 1) > model.contacts.count then
+                toString model.contacts.count
             else
-                toString (model.startContactIndex + model.contactsPerPage - 1)
+                toString (model.contacts.startIndex + model.contacts.perPage - 1)
 
         nextLinkUrl =
-            Maybe.withDefault "" model.nextContactsUrl
+            Maybe.withDefault "" model.contacts.nextUrl
 
         previousLinkUrl =
-            Maybe.withDefault "" model.previousContactsUrl
+            Maybe.withDefault "" model.contacts.previousUrl
 
         nextLink =
             if nextLinkUrl == "" then
@@ -139,11 +139,19 @@ pagination model =
                         [ span [ class "glyphicon glyphicon-step-backward" ] [] ]
                     ]
     in
-        if model.contactsCount == 0 then
+        if model.contacts.count == 0 then
             div [] []
         else
             div []
                 [ previousLink
-                , span [] [ text (startIndex ++ "-" ++ endIndex ++ " of " ++ toString model.contactsCount) ]
+                , span []
+                    [ text
+                        (startIndex
+                            ++ "-"
+                            ++ endIndex
+                            ++ " of "
+                            ++ toString model.contacts.count
+                        )
+                    ]
                 , nextLink
                 ]

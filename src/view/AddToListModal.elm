@@ -12,7 +12,7 @@ view : Model -> Html Msg
 view model =
     let
         currentName =
-            case model.activeList of
+            case model.lists.active of
                 Nothing ->
                     ""
 
@@ -45,13 +45,13 @@ view model =
                                 [ text list.name ]
                             ]
                     )
-                    model.lists
+                    model.lists.elements
                 )
 
         selectCount =
             div [ class "alert alert-info" ]
                 [ text
-                    (toString (model.selectedLists |> List.length)
+                    (toString (model.lists.selected |> List.length)
                         ++ " selected"
                     )
                 ]
@@ -74,7 +74,7 @@ view model =
                 ]
 
         headerText =
-            "Add " ++ (toString (model.selectedContacts |> List.length)) ++ " contacts to lists"
+            "Add " ++ (toString (model.contacts.selected |> List.length)) ++ " contacts to lists"
 
         modalConfig =
             { closeMessage = Just CloseAddContactsToListsModal
@@ -92,7 +92,7 @@ view model =
             }
     in
         Dialog.view
-            (if model.showAddContactsToListsModal then
+            (if model.lists.showAddContactsToListsModal then
                 Just modalConfig
              else
                 Nothing

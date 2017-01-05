@@ -22,7 +22,7 @@ view model =
         [ class "container" ]
         [ div
             [ class "row" ]
-            [ (Sidebar.view model.listMenuToShow model.lists model.tags)
+            [ (Sidebar.view model.lists.displayedMenu model.lists.elements model.tags)
             , (ContactsBody.view model)
             , (RenameModal.view model)
             , (AddToListModal.view model)

@@ -12,7 +12,7 @@ view : Model -> Html Msg
 view model =
     table [ class "table table-striped" ]
         [ (tableHeader model)
-        , tableBody model.contacts
+        , tableBody model.contacts.elements
         ]
 
 
@@ -20,17 +20,17 @@ headerInfoRow : Model -> Html Msg
 headerInfoRow model =
     let
         infoLine =
-            if (List.length model.selectedContacts) == 0 then
+            if (List.length model.contacts.selected) == 0 then
                 text
-                    ((model.contactsCount |> toString)
+                    ((model.contacts.count |> toString)
                         ++ " Contacts. Select contacts to organize, export or remove... "
                     )
             else
                 text
-                    ((model.selectedContacts |> List.length |> toString) ++ " Selected")
+                    ((model.contacts.selected |> List.length |> toString) ++ " Selected")
 
         manageMenu =
-            if (List.length model.selectedContacts) == 0 then
+            if (List.length model.contacts.selected) == 0 then
                 span [] []
             else
                 span
@@ -56,7 +56,7 @@ tableHeader : Model -> Html Msg
 tableHeader model =
     let
         ids =
-            List.map .id model.contacts
+            List.map .id model.contacts.elements
     in
         thead []
             [ headerInfoRow model

@@ -8,44 +8,81 @@ import Json.Encode
 
 showModal : Model -> ( Model, Cmd Msg )
 showModal model =
-    { model
-        | showAddContactsToListsModal = True
-        , selectedLists = []
-    }
-        ! []
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists
+                | showAddContactsToListsModal = True
+                , selected = []
+            }
+    in
+        { model
+            | lists = updatedLists
+        }
+            ! []
 
 
 closeModal : Model -> ( Model, Cmd Msg )
 closeModal model =
-    { model
-        | showAddContactsToListsModal = False
-        , httpError = Nothing
-    }
-        ! []
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | showAddContactsToListsModal = False }
+    in
+        { model
+            | lists = updatedLists
+            , httpError = Nothing
+        }
+            ! []
 
 
 contactsCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
 contactsCheckbox model id state =
-    if state == True then
-        { model | selectedContacts = id :: model.selectedContacts } ! []
-    else
-        { model
-            | selectedContacts =
-                List.filter (\e -> e /= id) model.selectedContacts
-        }
-            ! []
+    let
+        contacts =
+            model.contacts
+
+        updatedContactsAdd =
+            { contacts | selected = id :: model.contacts.selected }
+
+        updatedContactsDelete =
+            { contacts
+                | selected =
+                    List.filter (\e -> e /= id) model.contacts.selected
+            }
+    in
+        if state == True then
+            { model | contacts = updatedContactsAdd } ! []
+        else
+            { model
+                | contacts = updatedContactsDelete
+            }
+                ! []
 
 
 listCheckbox : Model -> String -> Bool -> ( Model, Cmd Msg )
 listCheckbox model id state =
-    if state == True then
-        { model | selectedLists = id :: model.selectedLists } ! []
-    else
-        { model
-            | selectedLists =
-                List.filter (\e -> e /= id) model.selectedLists
-        }
-            ! []
+    let
+        lists =
+            model.lists
+
+        updatedListsAdd =
+            { lists | selected = id :: model.lists.selected }
+
+        updatedListsDelete =
+            { lists | selected = (List.filter (\e -> e /= id) model.lists.selected) }
+    in
+        if state == True then
+            { model | lists = updatedListsAdd } ! []
+        else
+            { model
+                | lists = updatedListsDelete
+            }
+                ! []
 
 
 complete : Model -> ( Model, Cmd Msg )
@@ -55,10 +92,17 @@ complete model =
 
 submit : Model -> ( Model, Cmd Msg )
 submit model =
-    { model
-        | showAddContactsToListsModal = False
-    }
-        ! [ postAddContactsToLists model ]
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | showAddContactsToListsModal = False }
+    in
+        { model
+            | lists = updatedLists
+        }
+            ! [ postAddContactsToLists model ]
 
 
 postAddContactsToLists : Model -> Cmd Msg
@@ -68,10 +112,10 @@ postAddContactsToLists model =
             "http://0.0.0.0:3000/contacts-service/v3/accounts/1/activities/add_list_memberships"
 
         listIds =
-            List.map Json.Encode.string model.selectedLists
+            List.map Json.Encode.string model.lists.selected
 
         contactIds =
-            List.map Json.Encode.string model.selectedContacts
+            List.map Json.Encode.string model.contacts.selected
 
         contactIdsObj =
             Json.Encode.object [ ( "contact_ids", Json.Encode.list contactIds ) ]
