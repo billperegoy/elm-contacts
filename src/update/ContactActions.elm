@@ -6,83 +6,90 @@ import Contact exposing (..)
 import HttpErrors
 
 
+convertUrl : String -> Maybe String
+convertUrl url =
+    if url == "" then
+        Nothing
+    else
+        Just url
+
+
+indexOffset : Model -> PaginationDirection -> Int
+indexOffset model direction =
+    case direction of
+        Forward ->
+            model.contacts.perPage
+
+        Backward ->
+            0 - model.contacts.perPage
+
+
+httpParams : List ( String, String ) -> String
+httpParams params =
+    let
+        paramStringList =
+            List.map (\( name, value ) -> name ++ "=" ++ value) params
+    in
+        String.join "&" paramStringList
+
+
+urlString : String -> List ( String, String ) -> String
+urlString baseUrl params =
+    baseUrl
+        ++ "?"
+        ++ httpParams params
+
+
 receive : Model -> ContactsResponse -> ( Model, Cmd Msg )
 receive model response =
-    let
-        previous =
-            if response.links.previous.url == "" then
-                Nothing
-            else
-                Just response.links.previous.url
-
-        next =
-            if response.links.next.url == "" then
-                Nothing
-            else
-                Just response.links.next.url
-
-        contacts =
-            model.contacts
-
-        updatedContacts =
-            { contacts
-                | elements = response.contacts
-                , count = response.count
-                , previousUrl = previous
-                , nextUrl = next
-                , selected = []
-            }
-    in
-        { model
-            | contacts = updatedContacts
-            , httpError = Nothing
-        }
-            ! []
+    (model
+        |> setContactElements response.contacts
+        |> setContactCount response.count
+        |> setContactPreviousUrl (convertUrl response.links.previous.url)
+        |> setContactNextUrl (convertUrl response.links.next.url)
+        |> setContactSelected []
+        |> setHttpError Nothing
+    )
+        ! []
 
 
 request : Model -> ContactsFilterState -> ( Model, Cmd Msg )
 request model contactsFilterState =
-    let
-        contacts =
-            model.contacts
-
-        updatedContacts =
-            { contacts
-                | elements = []
-                , count = 0
-                , startIndex = 1
-                , filterState = contactsFilterState
-            }
-    in
-        { model
-            | contacts = updatedContacts
-        }
-            ! [ getContacts contactsFilterState model.contacts.perPage ]
+    (model
+        |> setContactElements []
+        |> setContactCount 0
+        |> setContactStartIndex 1
+        |> setContactFilterState contactsFilterState
+    )
+        ! [ getContacts contactsFilterState model.contacts.perPage ]
 
 
 requestPaginated : Model -> PaginationDirection -> String -> ( Model, Cmd Msg )
 requestPaginated model direction url =
     let
-        increment =
-            case direction of
-                Forward ->
-                    model.contacts.perPage
-
-                Backward ->
-                    0 - model.contacts.perPage
-
-        contacts =
-            model.contacts
-
-        updatedContacts =
-            { contacts
-                | startIndex = contacts.startIndex + increment
-            }
+        offset =
+            indexOffset model direction
     in
-        { model
-            | contacts = updatedContacts
-        }
+        (model
+            |> setContactStartIndex (model.contacts.startIndex + offset)
+        )
             ! [ getPaginatedContacts url ]
+
+
+displayPerPageDropdown : Model -> ( Model, Cmd Msg )
+displayPerPageDropdown model =
+    (model |> setContactPerPageDropdown True)
+        ! []
+
+
+setPerPageCount : Model -> Int -> ( Model, Cmd Msg )
+setPerPageCount model count =
+    (model
+        |> setContactStartIndex 1
+        |> setContactPerPage count
+        |> setContactPerPageDropdown False
+    )
+        ! [ getContacts model.contacts.filterState count ]
 
 
 getContacts : ContactsFilterState -> Int -> Cmd Msg
@@ -127,50 +134,3 @@ getPaginatedContacts path =
             "http://0.0.0.0:3000/" ++ path
     in
         Http.send ProcessContacts (Http.get url contactResponseDecoder)
-
-
-httpParams : List ( String, String ) -> String
-httpParams params =
-    let
-        paramStringList =
-            List.map (\( name, value ) -> name ++ "=" ++ value) params
-    in
-        String.join "&" paramStringList
-
-
-urlString : String -> List ( String, String ) -> String
-urlString baseUrl params =
-    baseUrl
-        ++ "?"
-        ++ httpParams params
-
-
-displayPerPageDropdown : Model -> ( Model, Cmd Msg )
-displayPerPageDropdown model =
-    let
-        contacts =
-            model.contacts
-
-        updatedContacts =
-            { contacts | perPageDropdown = True }
-    in
-        { model | contacts = updatedContacts } ! []
-
-
-setPerPageCount : Model -> Int -> ( Model, Cmd Msg )
-setPerPageCount model count =
-    let
-        contacts =
-            model.contacts
-
-        updatedContacts =
-            { contacts
-                | startIndex = 1
-                , perPage = count
-                , perPageDropdown = False
-            }
-    in
-        { model
-            | contacts = updatedContacts
-        }
-            ! [ getContacts model.contacts.filterState count ]
