@@ -12,108 +12,65 @@ import Json.Encode
 
 receive : Model -> EmailListResponse -> ( Model, Cmd Msg )
 receive model response =
-    let
-        lists =
-            model.lists
-
-        updatedLists =
-            { lists | elements = response.lists }
-    in
-        { model
-            | lists = updatedLists
-            , httpError = Nothing
-        }
-            ! []
+    (model
+        |> setListElements response.lists
+        |> setHttpError Nothing
+    )
+        ! []
 
 
 showRenameModal : Model -> EmailList -> ( Model, Cmd Msg )
 showRenameModal model list =
-    let
-        lists =
-            model.lists
-
-        updatedLists =
-            { lists
-                | showNameModal = True
-                , active = Just list
-                , httpAction = Put
-                , displayedMenu = Nothing
-            }
-    in
-        { model
-            | lists = updatedLists
-        }
-            ! []
+    (model
+        |> setListShowNameModal True
+        |> setListActive (Just list)
+        |> setListHttpAction Put
+        |> setListDisplayedMenu Nothing
+    )
+        ! []
 
 
 completeListRename : Model -> ( Model, Cmd Msg )
 completeListRename model =
-    let
-        lists =
-            model.lists
-
-        updatedLists =
-            { lists | showNameModal = False }
-    in
-        { model
-            | httpError = Nothing
-            , lists = updatedLists
-        }
-            ! [ getEmailLists ]
+    (model
+        |> setListShowNameModal False
+        |> setHttpError Nothing
+    )
+        ! [ getEmailLists ]
 
 
 showNewListModal : Model -> ( Model, Cmd Msg )
 showNewListModal model =
-    let
-        lists =
-            model.lists
-
-        updatedLists =
-            { lists
-                | showNameModal = True
-                , httpAction = Post
-                , displayedMenu = Nothing
-            }
-    in
-        { model
-            | lists = updatedLists
-        }
-            ! []
+    (model
+        |> setListShowNameModal True
+        |> setListHttpAction Post
+        |> setListDisplayedMenu Nothing
+    )
+        ! []
 
 
 updateNewListName : Model -> String -> ( Model, Cmd Msg )
 updateNewListName model name =
-    let
-        lists =
-            model.lists
-
-        updatedLists =
-            { lists | newName = name }
-    in
-        { model
-            | lists = updatedLists
-        }
-            ! []
+    (model
+        |> setListNewName name
+    )
+        ! []
 
 
 listHttpError : Model -> Http.Error -> ( Model, Cmd Msg )
 listHttpError model error =
-    { model | httpError = Just error } ! []
+    (model
+        |> setHttpError (Just error)
+    )
+        ! []
 
 
 requestListDelete : Model -> String -> ( Model, Cmd Msg )
 requestListDelete model id =
-    let
-        lists =
-            model.lists
-
-        updatedLists =
-            { lists | displayedMenu = Nothing }
-    in
-        { model
-            | lists = updatedLists
-        }
-            ! [ deleteList id ]
+    (model
+        |> setListDisplayedMenu Nothing
+    )
+        ! [ deleteList id ]
 
 
 submitListAction : Model -> ( Model, Cmd Msg )
@@ -133,18 +90,28 @@ submitListAction model =
 
 processListDelete : Model -> ( Model, Cmd Msg )
 processListDelete model =
-    let
-        lists =
-            model.lists
+    (model
+        |> setListActive Nothing
+        |> setHttpError Nothing
+    )
+        ! [ getEmailLists, ContactActions.getContacts All model.contacts.perPage ]
 
-        updatedLists =
-            { lists | active = Nothing }
-    in
-        { model
-            | httpError = Nothing
-            , lists = updatedLists
-        }
-            ! [ getEmailLists, ContactActions.getContacts All model.contacts.perPage ]
+
+closeListRenameModal : Model -> ( Model, Cmd Msg )
+closeListRenameModal model =
+    (model
+        |> setListShowNameModal False
+        |> setHttpError Nothing
+    )
+        ! []
+
+
+setActiveListMenu : Model -> String -> ( Model, Cmd Msg )
+setActiveListMenu model id =
+    (model
+        |> setListDisplayedMenu (Just id)
+    )
+        ! []
 
 
 getEmailLists : Cmd Msg
@@ -154,22 +121,6 @@ getEmailLists =
             "http://0.0.0.0:3000/contacts-service/v3/accounts/1/lists"
     in
         Http.send ProcessEmailLists (Http.get url emailListResponseDecoder)
-
-
-closeListRenameModal : Model -> ( Model, Cmd Msg )
-closeListRenameModal model =
-    let
-        lists =
-            model.lists
-
-        updatedLists =
-            { lists | showNameModal = False }
-    in
-        { model
-            | lists = updatedLists
-            , httpError = Nothing
-        }
-            ! []
 
 
 listAction : String -> String -> HttpAction -> Cmd Msg
@@ -222,15 +173,3 @@ deleteList id =
                 }
     in
         Http.send ProcessListDelete request
-
-
-setActiveListMenu : Model -> String -> ( Model, Cmd Msg )
-setActiveListMenu model id =
-    let
-        lists =
-            model.lists
-
-        updatedLists =
-            { lists | displayedMenu = Just id }
-    in
-        { model | lists = updatedLists } ! []

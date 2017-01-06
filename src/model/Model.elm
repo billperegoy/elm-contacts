@@ -40,6 +40,102 @@ type alias ListModel =
     }
 
 
+setListElements : List EmailList -> Model -> Model
+setListElements elements model =
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | elements = elements }
+    in
+        { model | lists = updatedLists }
+
+
+setListShowNameModal : Bool -> Model -> Model
+setListShowNameModal showNameModal model =
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | showNameModal = showNameModal }
+    in
+        { model | lists = updatedLists }
+
+
+setListActive : Maybe EmailList -> Model -> Model
+setListActive active model =
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | active = active }
+    in
+        { model | lists = updatedLists }
+
+
+setListNewName : String -> Model -> Model
+setListNewName newName model =
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | newName = newName }
+    in
+        { model | lists = updatedLists }
+
+
+setListHttpAction : HttpAction -> Model -> Model
+setListHttpAction httpAction model =
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | httpAction = httpAction }
+    in
+        { model | lists = updatedLists }
+
+
+setListDisplayedMenu : Maybe String -> Model -> Model
+setListDisplayedMenu displayedMenu model =
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | displayedMenu = displayedMenu }
+    in
+        { model | lists = updatedLists }
+
+
+setListShowAddContactsToListsModal : Bool -> Model -> Model
+setListShowAddContactsToListsModal showAddContactsToListsModal model =
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | showAddContactsToListsModal = showAddContactsToListsModal }
+    in
+        { model | lists = updatedLists }
+
+
+setListSelected : List String -> Model -> Model
+setListSelected selected model =
+    let
+        lists =
+            model.lists
+
+        updatedLists =
+            { lists | selected = selected }
+    in
+        { model | lists = updatedLists }
+
+
 setContactElements : List Contact -> Model -> Model
 setContactElements elements model =
     let
